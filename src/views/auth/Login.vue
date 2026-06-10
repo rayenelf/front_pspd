@@ -6,8 +6,14 @@ import Button from "@/components/ui/Button.vue";
 import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
 import Checkbox from "@/components/ui/Checkbox.vue";
+import { googleLoginUrl } from "@/lib/auth";
 
 const remember = ref(false);
+
+// OAuth2 Google (tâche Majd — F3) : redirige vers Spring qui enchaîne vers Google.
+function loginWithGoogle() {
+  window.location.href = googleLoginUrl();
+}
 </script>
 
 <template>
@@ -36,7 +42,7 @@ const remember = ref(false);
         <span class="bg-background px-3">ou continuer avec</span>
       </div>
       <div class="grid grid-cols-2 gap-3">
-        <Button variant="outline" type="button">Google</Button>
+        <Button variant="outline" type="button" @click="loginWithGoogle">Google</Button>
         <Button variant="outline" type="button">Apple</Button>
       </div>
     </form>

@@ -11,6 +11,7 @@ export const router = createRouter({
     { path: "/auth/login", component: () => import("@/views/auth/Login.vue") },
     { path: "/auth/signup", component: () => import("@/views/auth/Signup.vue") },
     { path: "/auth/forgot-password", component: () => import("@/views/auth/ForgotPassword.vue") },
+    { path: "/auth/callback", component: () => import("@/views/auth/OAuthCallback.vue") },
     {
       path: "/client",
       component: () => import("@/views/client/ClientLayout.vue"),
