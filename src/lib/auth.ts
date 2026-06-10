@@ -73,3 +73,43 @@ export function homeRouteForRole(role: Role | null): string {
       return "/client";
   }
 }
+
+// ── Infos utilisateur courantes (lues depuis le JWT décodé) ──────────────────
+
+export interface UserInfo {
+  uid: string;
+  email: string;
+  prenom: string | null;
+  nom: string | null;
+  role: Role;
+}
+
+/** Retourne les infos de l'utilisateur connecté depuis le JWT local. */
+export function getCurrentUser(): UserInfo | null {
+  const token = getAccessToken();
+  if (!token) return null;
+  const c = decodeJwt(token);
+  if (!c?.sub) return null;
+  return {
+    uid:    c.uid    as string,
+    email:  c.sub    as string,
+    prenom: (c.prenom as string) ?? null,
+    nom:    (c.nom    as string) ?? null,
+    role:   c.role   as Role,
+  };
+}
+
+/** "Salma Bennani" ou à défaut la partie locale de l'email. */
+export function getDisplayName(user: UserInfo): string {
+  const parts = [user.prenom, user.nom].filter(Boolean);
+  return parts.length ? parts.join(" ") : user.email.split("@")[0];
+}
+
+/** "SB", "SA", ou les deux premières lettres de l'email. */
+export function getInitials(user: UserInfo): string {
+  if (user.prenom && user.nom)
+    return (user.prenom[0] + user.nom[0]).toUpperCase();
+  if (user.prenom) return user.prenom.slice(0, 2).toUpperCase();
+  if (user.nom)    return user.nom.slice(0, 2).toUpperCase();
+  return user.email.slice(0, 2).toUpperCase();
+}

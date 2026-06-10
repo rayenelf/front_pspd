@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { RouterLink, useRoute } from "vue-router";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import { MapPin, LogOut } from "lucide-vue-next";
 import { cn } from "@/lib/utils";
 import Button from "@/components/ui/Button.vue";
 import type { NavItem } from "./types";
+import { getCurrentUser, getDisplayName, getInitials, clearSession } from "@/lib/auth";
 
 const props = defineProps<{
   title: string;
@@ -12,12 +13,23 @@ const props = defineProps<{
   items: NavItem[];
 }>();
 
-const route = useRoute();
+const route  = useRoute();
+const router = useRouter();
 const pathname = computed(() => route.path);
+
+const user        = getCurrentUser();
+const displayName = user ? getDisplayName(user) : "—";
+const initials    = user ? getInitials(user)     : "?";
+const email       = user?.email ?? "";
 
 function isActive(to: string) {
   const lower = "/" + props.role.toLowerCase();
   return pathname.value === to || (to !== lower && pathname.value.startsWith(to));
+}
+
+function logout() {
+  clearSession();
+  router.push("/auth/login");
 }
 </script>
 
@@ -49,11 +61,9 @@ function isActive(to: string) {
         </RouterLink>
       </nav>
       <div class="border-t border-border p-3">
-        <RouterLink to="/">
-          <Button variant="ghost" size="sm" class="w-full justify-start gap-2">
-            <LogOut class="h-4 w-4" /> Déconnexion
-          </Button>
-        </RouterLink>
+        <Button variant="ghost" size="sm" class="w-full justify-start gap-2" @click="logout">
+          <LogOut class="h-4 w-4" /> Déconnexion
+        </Button>
       </div>
     </aside>
     <div class="flex flex-1 flex-col">
@@ -64,11 +74,11 @@ function isActive(to: string) {
         </div>
         <div class="flex items-center gap-3">
           <div class="hidden text-right sm:block">
-            <p class="text-sm font-medium">Salma B.</p>
-            <p class="text-xs text-muted-foreground">{{ role.toLowerCase() }}@domivo.ma</p>
+            <p class="text-sm font-medium">{{ displayName }}</p>
+            <p class="text-xs text-muted-foreground">{{ email }}</p>
           </div>
           <div class="grid h-10 w-10 place-items-center rounded-full bg-gradient-warm font-display text-sm font-bold text-primary-foreground">
-            SB
+            {{ initials }}
           </div>
         </div>
       </header>
