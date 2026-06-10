@@ -81,6 +81,7 @@ export interface UserInfo {
   email: string;
   prenom: string | null;
   nom: string | null;
+  telephone: string | null;
   role: Role;
 }
 
@@ -91,11 +92,12 @@ export function getCurrentUser(): UserInfo | null {
   const c = decodeJwt(token);
   if (!c?.sub) return null;
   return {
-    uid:    c.uid    as string,
-    email:  c.sub    as string,
-    prenom: (c.prenom as string) ?? null,
-    nom:    (c.nom    as string) ?? null,
-    role:   c.role   as Role,
+    uid:       c.uid       as string,
+    email:     c.sub       as string,
+    prenom:    (c.prenom    as string) ?? null,
+    nom:       (c.nom       as string) ?? null,
+    telephone: (c.telephone as string) ?? null,
+    role:      c.role      as Role,
   };
 }
 
