@@ -12,9 +12,15 @@ const REFRESH_KEY = "pspd_refresh_token";
 
 export type Role = "CLIENT" | "PRESTATAIRE" | "ADMIN" | "SUPER_ADMIN";
 
-/** URL d'entrée du flux OAuth2 Google (Spring redirige vers Google). */
+/** Login Google — utilisateur existant (page Login). Pas de rôle. */
 export function googleLoginUrl(): string {
   return `${API_BASE}/oauth2/authorization/google`;
+}
+
+/** Signup Google — nouveau compte avec rôle pré-sélectionné (page Signup). */
+export function googleSignupUrl(role: "client" | "pro"): string {
+  const backendRole = role === "pro" ? "PRESTATAIRE" : "CLIENT";
+  return `${API_BASE}/api/auth/oauth2/google?role=${backendRole}`;
 }
 
 export function saveSession(accessToken: string, refreshToken: string): void {
