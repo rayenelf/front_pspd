@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { RouterLink, useRoute } from "vue-router";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import { MapPin, LogOut } from "lucide-vue-next";
 import { cn } from "@/lib/utils";
 import Button from "@/components/ui/Button.vue";
@@ -14,6 +14,17 @@ const props = defineProps<{
 
 const route = useRoute();
 const pathname = computed(() => route.path);
+
+const router = useRouter();
+
+function logout() {
+  try {
+    localStorage.removeItem("pspd_token");
+  } catch (e) {
+    // ignore
+  }
+  router.push("/auth/login");
+}
 
 function isActive(to: string) {
   const lower = "/" + props.role.toLowerCase();
@@ -49,11 +60,9 @@ function isActive(to: string) {
         </RouterLink>
       </nav>
       <div class="border-t border-border p-3">
-        <RouterLink to="/">
-          <Button variant="ghost" size="sm" class="w-full justify-start gap-2">
-            <LogOut class="h-4 w-4" /> Déconnexion
-          </Button>
-        </RouterLink>
+        <Button @click="logout" variant="ghost" size="sm" class="w-full justify-start gap-2">
+          <LogOut class="h-4 w-4" /> Déconnexion
+        </Button>
       </div>
     </aside>
     <div class="flex flex-1 flex-col">
