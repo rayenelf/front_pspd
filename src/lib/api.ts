@@ -1,8 +1,11 @@
 // ── Client HTTP centralisé (F2 — tâche Majd) ────────────────────────────────
-// Injecte le JWT dans chaque requête, gère les erreurs au format unifié.
-import { getAccessToken, clearSession } from "@/lib/auth";
+// Injecte le JWT dans chaque requête, gère le refresh auto sur 401, et le
+// format d'erreur unifié.
+import { getAccessToken, getRefreshToken, saveSession, clearSession } from "@/lib/auth";
 
-const BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
+// Base vide par défaut → les chemins "/api/..." passent par le proxy Vite
+// (/api → localhost:8081), ce qui évite les soucis de CORS en dev.
+const BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -10,7 +13,43 @@ export class ApiError extends Error {
   }
 }
 
-async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+/** Force une déconnexion propre + retour au login. */
+function forceLogout(): never {
+  clearSession();
+  window.location.href = "/auth/login";
+  throw new ApiError(401, "Session expirée");
+}
+
+// Évite plusieurs refresh simultanés : on partage la même promesse.
+let refreshPromise: Promise<boolean> | null = null;
+
+/** Tente de rafraîchir l'access token via /api/auth/refresh. Retourne true si OK. */
+async function tryRefresh(): Promise<boolean> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return false;
+
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${BASE}/api/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    })
+      .then(async (res) => {
+        if (!res.ok) return false;
+        const data = await res.json().catch(() => null);
+        if (data?.accessToken && data?.refreshToken) {
+          saveSession(data.accessToken, data.refreshToken);
+          return true;
+        }
+        return false;
+      })
+      .catch(() => false)
+      .finally(() => { refreshPromise = null; });
+  }
+  return refreshPromise;
+}
+
+async function apiFetch<T>(path: string, options: RequestInit = {}, _retried = false): Promise<T> {
   const token = getAccessToken();
   const res = await fetch(`${BASE}${path}`, {
     ...options,
@@ -22,9 +61,11 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   });
 
   if (res.status === 401) {
-    clearSession();
-    window.location.href = "/auth/login";
-    throw new ApiError(401, "Session expirée");
+    // Première 401 → on tente un refresh puis on rejoue la requête une seule fois.
+    if (!_retried && (await tryRefresh())) {
+      return apiFetch<T>(path, options, true);
+    }
+    forceLogout();
   }
 
   if (!res.ok) {

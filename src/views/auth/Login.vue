@@ -32,14 +32,18 @@ async function submitLogin() {
   isSubmitting.value = true;
   try {
     const resp = await loginAccount({ email: email.value.trim(), motDePasse: password.value });
-    if (resp.token) {
-      // resp.token DOIT être le JWT de TokenService (même que OAuth2/2FA).
-      // TODO B6 : quand le backend renverra accessToken + refreshToken (AuthResponse),
-      //   remplacer par : auth.setSession(resp.accessToken, resp.refreshToken)
-      auth.setSession(resp.token, resp.token);
+
+    // 2FA active → le backend renvoie un challenge, on redirige vers la saisie OTP.
+    if (resp.twoFactorRequired) {
+      await router.push({ path: "/auth/2fa", query: { email: resp.email } });
+      return;
+    }
+
+    if (resp.accessToken && resp.refreshToken) {
+      auth.setSession(resp.accessToken, resp.refreshToken);
       await router.push(auth.homeRoute);
     } else {
-      errorMessage.value = "Réponse de connexion invalide (token manquant).";
+      errorMessage.value = "Réponse de connexion invalide (tokens manquants).";
     }
   } catch (e) {
     errorMessage.value = e instanceof Error ? e.message : "Erreur de connexion.";

@@ -5,7 +5,9 @@
 // Utilisé par : GoogleLoginButton.vue + OAuthCallback.vue (tâche Majd — F3).
 // ============================================================
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
+// URL absolue du backend — utilisée UNIQUEMENT pour les redirections OAuth2
+// (navigation pleine page, hors proxy Vite). Le backend dev tourne sur 8081.
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8081";
 
 const TOKEN_KEY = "pspd_access_token";
 const REFRESH_KEY = "pspd_refresh_token";
@@ -195,11 +197,13 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  id: string;
+  id?: string;
   email: string;
-  role: SignupRole;
-  statutCompte: string;
-  token?: string;
+  role?: SignupRole;
+  statutCompte?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  twoFactorRequired?: boolean;
 }
 
 export async function loginAccount(payload: LoginRequest): Promise<LoginResponse> {
