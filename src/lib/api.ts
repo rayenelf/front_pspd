@@ -51,10 +51,13 @@ async function tryRefresh(): Promise<boolean> {
 
 async function apiFetch<T>(path: string, options: RequestInit = {}, _retried = false): Promise<T> {
   const token = getAccessToken();
+  // Pour un envoi multipart (FormData), on laisse le navigateur poser le
+  // Content-Type avec la boundary — on ne force PAS application/json.
+  const isFormData = options.body instanceof FormData;
   const res = await fetch(`${BASE}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers as Record<string, string> ?? {}),
     },
@@ -111,6 +114,17 @@ export interface AuthResponse {
   role: string;
 }
 
+export type TypeDocument =
+  | "CIN" | "PATENTE_RC" | "ATTESTATION_FISCALE" | "ASSURANCE_RC" | "DIPLOME";
+
+export interface DocumentData {
+  id: string;
+  type: TypeDocument;
+  urlFichier: string;
+  statut: "EN_ATTENTE" | "VERIFICATION" | "VALIDE" | "SUSPENDU";
+  verifieLe: string | null;
+}
+
 // ── Endpoints ──────────────────────────────────────────────────────────────
 
 export const api = {
@@ -134,4 +148,16 @@ export const api = {
   /** Active ou désactive la 2FA — endpoint protégé (nécessite B5). */
   toggle2fa: (active: boolean): Promise<void> =>
     apiFetch("/api/users/me/2fa", { method: "POST", body: JSON.stringify({ active }) }),
+
+  /** Documents légaux du prestataire courant (B9). */
+  getDocuments: (): Promise<DocumentData[]> =>
+    apiFetch("/api/prestataires/me/documents"),
+
+  /** Dépose un document légal (multipart) — PRESTATAIRE uniquement. */
+  uploadDocument: (type: TypeDocument, file: File): Promise<DocumentData> => {
+    const form = new FormData();
+    form.append("type", type);
+    form.append("file", file);
+    return apiFetch("/api/prestataires/me/documents", { method: "POST", body: form });
+  },
 };
