@@ -149,6 +149,13 @@ export const api = {
   toggle2fa: (active: boolean): Promise<void> =>
     apiFetch("/api/users/me/2fa", { method: "POST", body: JSON.stringify({ active }) }),
 
+  /** Déconnexion : blackliste l'access + le refresh token côté serveur (#2). */
+  logout: (): Promise<void> =>
+    apiFetch("/api/auth/logout", {
+      method: "POST",
+      body: JSON.stringify({ refreshToken: getRefreshToken() }),
+    }),
+
   /** Valide le lien de vérification d'email — endpoint public. */
   verifyEmail: (token: string): Promise<void> =>
     apiFetch("/api/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) }),

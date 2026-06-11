@@ -27,8 +27,8 @@ function isActive(to: string) {
   return pathname.value === to || (to !== lower && pathname.value.startsWith(to));
 }
 
-function logout() {
-  auth.logout();
+async function logout() {
+  await auth.logout();
   router.push("/auth/login");
 }
 </script>
