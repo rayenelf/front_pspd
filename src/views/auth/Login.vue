@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import { loginAccount, googleLoginUrl } from "@/lib/auth";
 import { useAuthStore } from "@/stores/auth";
+import { api } from "@/lib/api";
 import AuthLayout from "@/components/auth/AuthLayout.vue";
 import Button from "@/components/ui/Button.vue";
 import Input from "@/components/ui/Input.vue";
@@ -14,6 +15,12 @@ const email = ref("");
 const password = ref("");
 const isSubmitting = ref(false);
 const errorMessage = ref("");
+
+// Email non vérifié → on propose de renvoyer le lien.
+const needsVerification = ref(false);
+const resending = ref(false);
+const resentOk = ref(false);
+
 const router = useRouter();
 const auth = useAuthStore();
 
@@ -22,8 +29,23 @@ function loginWithGoogle() {
   window.location.href = googleLoginUrl();
 }
 
+async function resendVerification() {
+  resending.value = true;
+  try {
+    await api.resendVerification(email.value.trim());
+    resentOk.value = true;
+  } catch {
+    /* réponse 204 quoi qu'il arrive côté backend */
+    resentOk.value = true;
+  } finally {
+    resending.value = false;
+  }
+}
+
 async function submitLogin() {
   errorMessage.value = "";
+  needsVerification.value = false;
+  resentOk.value = false;
   if (!email.value || !password.value) {
     errorMessage.value = "Email et mot de passe requis.";
     return;
@@ -46,7 +68,13 @@ async function submitLogin() {
       errorMessage.value = "Réponse de connexion invalide (tokens manquants).";
     }
   } catch (e) {
-    errorMessage.value = e instanceof Error ? e.message : "Erreur de connexion.";
+    const msg = e instanceof Error ? e.message : "Erreur de connexion.";
+    if (msg === "EMAIL_NOT_VERIFIED") {
+      needsVerification.value = true;
+      errorMessage.value = "Votre email n'est pas encore vérifié.";
+    } else {
+      errorMessage.value = msg;
+    }
   } finally {
     isSubmitting.value = false;
   }
@@ -77,6 +105,18 @@ async function submitLogin() {
         {{ isSubmitting ? "Connexion…" : "Se connecter" }}
       </Button>
       <p v-if="errorMessage" class="text-sm text-destructive">{{ errorMessage }}</p>
+
+      <!-- Email non vérifié → renvoi du lien -->
+      <div v-if="needsVerification" class="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
+        <p v-if="!resentOk">
+          Vérifiez votre boîte mail, ou
+          <button type="button" class="font-semibold underline" :disabled="resending" @click="resendVerification">
+            {{ resending ? "envoi…" : "renvoyer le lien" }}
+          </button>.
+        </p>
+        <p v-else>📧 Lien de vérification renvoyé — consultez votre boîte mail.</p>
+      </div>
+
       <div class="relative py-2 text-center text-xs uppercase text-muted-foreground">
         <span class="absolute inset-0 top-1/2 -z-10 h-px bg-border" />
         <span class="bg-background px-3">ou continuer avec</span>

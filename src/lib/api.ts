@@ -149,6 +149,14 @@ export const api = {
   toggle2fa: (active: boolean): Promise<void> =>
     apiFetch("/api/users/me/2fa", { method: "POST", body: JSON.stringify({ active }) }),
 
+  /** Valide le lien de vérification d'email — endpoint public. */
+  verifyEmail: (token: string): Promise<void> =>
+    apiFetch("/api/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) }),
+
+  /** Renvoie un lien de vérification d'email — endpoint public. */
+  resendVerification: (email: string): Promise<void> =>
+    apiFetch("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email }) }),
+
   /** Documents légaux du prestataire courant (B9). */
   getDocuments: (): Promise<DocumentData[]> =>
     apiFetch("/api/prestataires/me/documents"),
