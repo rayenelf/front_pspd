@@ -4,10 +4,11 @@
 // On stocke les tokens, on lit le rôle, puis on redirige vers le bon dashboard.
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { saveSession, getRole, homeRouteForRole } from "@/lib/auth";
+import { useAuthStore } from "@/stores/auth";
 
 const route = useRoute();
 const router = useRouter();
+const auth = useAuthStore();
 const error = ref<string | null>(null);
 
 onMounted(() => {
@@ -19,9 +20,8 @@ onMounted(() => {
     return;
   }
 
-  saveSession(token, refresh);
-  const destination = homeRouteForRole(getRole());
-  router.replace(destination);
+  auth.setSession(token, refresh);
+  router.replace(auth.homeRoute);
 });
 </script>
 

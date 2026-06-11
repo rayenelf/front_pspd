@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { storeToRefs } from "pinia";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { MapPin, LogOut } from "lucide-vue-next";
 import { cn } from "@/lib/utils";
 import Button from "@/components/ui/Button.vue";
 import type { NavItem } from "./types";
-import { getCurrentUser, getDisplayName, getInitials, clearSession } from "@/lib/auth";
+import { useAuthStore } from "@/stores/auth";
 
 const props = defineProps<{
   title: string;
@@ -17,10 +18,8 @@ const route  = useRoute();
 const router = useRouter();
 const pathname = computed(() => route.path);
 
-const user        = getCurrentUser();
-const displayName = user ? getDisplayName(user) : "—";
-const initials    = user ? getInitials(user)     : "?";
-const email       = user?.email ?? "";
+const auth = useAuthStore();
+const { displayName, initials, email } = storeToRefs(auth);
 
 function isActive(to: string) {
   const lower = "/" + props.role.toLowerCase();
@@ -28,7 +27,7 @@ function isActive(to: string) {
 }
 
 function logout() {
-  clearSession();
+  auth.logout();
   router.push("/auth/login");
 }
 </script>

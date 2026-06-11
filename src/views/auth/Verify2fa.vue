@@ -3,11 +3,12 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter, RouterLink } from "vue-router";
 import AuthLayout from "@/components/auth/AuthLayout.vue";
 import Button from "@/components/ui/Button.vue";
-import { saveSession, getRole, homeRouteForRole } from "@/lib/auth";
+import { useAuthStore } from "@/stores/auth";
 import { api, type ApiError } from "@/lib/api";
 
 const route  = useRoute();
 const router = useRouter();
+const auth   = useAuthStore();
 
 const email = ref((route.query.email as string) ?? "");
 
@@ -88,8 +89,8 @@ async function submit() {
   error.value = null;
   try {
     const response = await api.verify2fa(email.value, otpCode.value);
-    saveSession(response.accessToken, response.refreshToken);
-    router.replace(homeRouteForRole(getRole()));
+    auth.setSession(response.accessToken, response.refreshToken);
+    router.replace(auth.homeRoute);
   } catch (e) {
     const err = e as ApiError;
     if (err.status === 429) {
