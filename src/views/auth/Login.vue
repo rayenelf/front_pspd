@@ -1,18 +1,51 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { RouterLink } from "vue-router";
+import { RouterLink, useRouter } from "vue-router";
+import { loginAccount, googleLoginUrl } from "@/lib/auth";
+import { useAuthStore } from "@/stores/auth";
 import AuthLayout from "@/components/auth/AuthLayout.vue";
 import Button from "@/components/ui/Button.vue";
 import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
 import Checkbox from "@/components/ui/Checkbox.vue";
-import { googleLoginUrl } from "@/lib/auth";
 
 const remember = ref(false);
+const email = ref("");
+const password = ref("");
+const isSubmitting = ref(false);
+const errorMessage = ref("");
+const router = useRouter();
+const auth = useAuthStore();
 
-// OAuth2 Google (tâche Majd — F3) : redirige vers Spring qui enchaîne vers Google.
+// OAuth2 Google (F3 — Majd) : redirige vers Spring qui enchaîne vers Google.
 function loginWithGoogle() {
   window.location.href = googleLoginUrl();
+}
+
+async function submitLogin() {
+  errorMessage.value = "";
+  if (!email.value || !password.value) {
+    errorMessage.value = "Email et mot de passe requis.";
+    return;
+  }
+
+  isSubmitting.value = true;
+  try {
+    const resp = await loginAccount({ email: email.value.trim(), motDePasse: password.value });
+    if (resp.token) {
+      // resp.token DOIT être le JWT de TokenService (même que OAuth2/2FA).
+      // TODO B6 : quand le backend renverra accessToken + refreshToken (AuthResponse),
+      //   remplacer par : auth.setSession(resp.accessToken, resp.refreshToken)
+      auth.setSession(resp.token, resp.token);
+      await router.push(auth.homeRoute);
+    } else {
+      errorMessage.value = "Réponse de connexion invalide (token manquant).";
+    }
+  } catch (e) {
+    errorMessage.value = e instanceof Error ? e.message : "Erreur de connexion.";
+  } finally {
+    isSubmitting.value = false;
+  }
 }
 </script>
 
@@ -21,22 +54,25 @@ function loginWithGoogle() {
     title="Bon retour 👋"
     subtitle="Connectez-vous pour gérer vos réservations et prestations."
   >
-    <form class="space-y-4" @submit.prevent>
+    <form class="space-y-4" @submit.prevent="submitLogin">
       <div class="space-y-2">
         <Label for="email">Email</Label>
-        <Input id="email" type="email" placeholder="vous@exemple.ma" />
+        <Input id="email" type="email" v-model="email" placeholder="vous@exemple.ma" />
       </div>
       <div class="space-y-2">
         <div class="flex items-center justify-between">
           <Label for="password">Mot de passe</Label>
           <RouterLink to="/auth/forgot-password" class="text-xs text-primary hover:underline">Oublié ?</RouterLink>
         </div>
-        <Input id="password" type="password" placeholder="••••••••" />
+        <Input id="password" type="password" v-model="password" placeholder="••••••••" />
       </div>
       <label class="flex items-center gap-2 text-sm text-muted-foreground">
         <Checkbox v-model="remember" /> Se souvenir de moi
       </label>
-      <Button class="w-full bg-gradient-warm text-primary-foreground shadow-glow">Se connecter</Button>
+      <Button type="submit" class="w-full bg-gradient-warm text-primary-foreground shadow-glow" :disabled="isSubmitting">
+        {{ isSubmitting ? "Connexion…" : "Se connecter" }}
+      </Button>
+      <p v-if="errorMessage" class="text-sm text-destructive">{{ errorMessage }}</p>
       <div class="relative py-2 text-center text-xs uppercase text-muted-foreground">
         <span class="absolute inset-0 top-1/2 -z-10 h-px bg-border" />
         <span class="bg-background px-3">ou continuer avec</span>
