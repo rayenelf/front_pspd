@@ -6,7 +6,7 @@ import Label from "@/components/ui/Label.vue";
 import Button from "@/components/ui/Button.vue";
 import Switch from "@/components/ui/Switch.vue";
 import { getCurrentUser, getInitials, getDisplayName } from "@/lib/auth";
-import { api, type ApiError } from "@/lib/api";
+import { api, type ApiError, type UserData } from "@/lib/api";
 
 // ── Données utilisateur depuis le JWT ──────────────────────────────────────
 const user = getCurrentUser();
@@ -58,6 +58,35 @@ async function save() {
 
 const initials    = user ? getInitials(user)     : "?";
 const displayName = user ? getDisplayName(user)  : "—";
+
+// ── 2FA ────────────────────────────────────────────────────────────────────
+const twoFaActive  = ref(false);   // sera sync depuis /api/users/me après B5
+const twoFaSaving  = ref(false);
+const twoFaMessage = ref<{ type: "success" | "error"; text: string } | null>(null);
+
+async function toggle2fa(active: boolean) {
+  twoFaSaving.value  = true;
+  twoFaMessage.value = null;
+  try {
+    await api.toggle2fa(active);
+    twoFaActive.value  = active;
+    twoFaMessage.value = {
+      type: "success",
+      text: active ? "Double authentification activée." : "Double authentification désactivée.",
+    };
+  } catch (e) {
+    const err = e as ApiError;
+    twoFaActive.value  = !active;  // rollback
+    twoFaMessage.value = {
+      type: "error",
+      text: err.status === 403 || err.status === 401
+        ? "Reconnectez-vous pour modifier ce paramètre."
+        : "Erreur lors de la modification. Réessayez.",
+    };
+  } finally {
+    twoFaSaving.value = false;
+  }
+}
 </script>
 
 <template>
@@ -132,6 +161,27 @@ const displayName = user ? getDisplayName(user)  : "—";
           </div>
         </div>
         <Button variant="outline" class="mt-5" disabled>Mettre à jour</Button>
+
+        <!-- Double authentification -->
+        <div class="mt-6 border-t border-border pt-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-medium text-sm">Double authentification (2FA)</p>
+              <p class="text-xs text-muted-foreground mt-0.5">
+                À chaque connexion, un code à 6 chiffres vous sera demandé.
+              </p>
+            </div>
+            <Switch
+              v-model="twoFaActive"
+              :disabled="twoFaSaving"
+              @update:modelValue="toggle2fa"
+            />
+          </div>
+          <p v-if="twoFaMessage" :class="[
+            'mt-3 rounded-md px-3 py-2 text-xs font-medium',
+            twoFaMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          ]">{{ twoFaMessage.text }}</p>
+        </div>
       </PanelCard>
     </div>
 

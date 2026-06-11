@@ -63,6 +63,13 @@ export interface UpdatePrestatairePayload {
   langues?: string;
 }
 
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  role: string;
+}
+
 // ── Endpoints ──────────────────────────────────────────────────────────────
 
 export const api = {
@@ -74,4 +81,16 @@ export const api = {
 
   patchPrestataire: (data: UpdatePrestatairePayload): Promise<void> =>
     apiFetch("/api/prestataires/me", { method: "PATCH", body: JSON.stringify(data) }),
+
+  /** Envoie (ou renvoie) un OTP à l'utilisateur — endpoint public. */
+  send2faOtp: (email: string): Promise<void> =>
+    apiFetch("/api/auth/2fa/send", { method: "POST", body: JSON.stringify({ email }) }),
+
+  /** Vérifie le code OTP et retourne les tokens JWT — endpoint public. */
+  verify2fa: (email: string, code: string): Promise<AuthResponse> =>
+    apiFetch("/api/auth/2fa/verify", { method: "POST", body: JSON.stringify({ email, code }) }),
+
+  /** Active ou désactive la 2FA — endpoint protégé (nécessite B5). */
+  toggle2fa: (active: boolean): Promise<void> =>
+    apiFetch("/api/users/me/2fa", { method: "POST", body: JSON.stringify({ active }) }),
 };
