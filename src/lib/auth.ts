@@ -60,6 +60,23 @@ export function getRole(): Role | null {
   return (claims?.role as Role) ?? null;
 }
 
+/**
+ * Vrai si un access token valide et non expiré est présent.
+ * Vérifie le claim `exp` (secondes epoch) ; un token expiré est purgé.
+ */
+export function isAuthenticated(): boolean {
+  const token = getAccessToken();
+  if (!token) return false;
+  const claims = decodeJwt(token);
+  if (!claims) return false;
+  const exp = claims.exp as number | undefined;
+  if (exp && exp * 1000 < Date.now()) {
+    clearSession();
+    return false;
+  }
+  return true;
+}
+
 /** Route de destination selon le rôle après login. */
 export function homeRouteForRole(role: Role | null): string {
   switch (role) {
