@@ -164,6 +164,8 @@ function getApiBaseUrl() {
 }
 
 export async function registerAccount(payload: SignupPayload): Promise<SignupResponse> {
+  // DEPRECATED: Utilise l'ancien endpoint sans vérification d'email
+  // Remplacé par sendEmailVerification() + verifyEmailAndCreateAccount()
   const response = await fetch(`${getApiBaseUrl()}/auth/register`, {
     method: "POST",
     headers: {
@@ -189,6 +191,112 @@ export async function registerAccount(payload: SignupPayload): Promise<SignupRes
   }
 
   return data as SignupResponse;
+}
+
+// ── Nouvelles fonctions pour la vérification d'email par OTP ──────────────────
+
+export interface EmailVerificationResponse {
+  success: boolean;
+  message: string;
+  email: string;
+}
+
+export interface VerifyEmailRequest {
+  email: string;
+  code: string;
+}
+
+/**
+ * Étape 1: Initie l'inscription et envoie un code OTP par email
+ */
+export async function sendEmailVerification(payload: SignupPayload): Promise<EmailVerificationResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/auth/send-verification`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const contentType = response.headers.get("content-type") ?? "";
+  const data = contentType.includes("application/json")
+    ? await response.json().catch(() => null)
+    : await response.text().catch(() => "");
+
+  if (!response.ok) {
+    const message =
+      typeof data === "object" && data && "message" in data
+        ? String(data.message)
+        : typeof data === "string" && data
+          ? data
+          : "Impossible d'envoyer le code de vérification pour le moment.";
+
+    throw new Error(message);
+  }
+
+  return data as EmailVerificationResponse;
+}
+
+/**
+ * Étape 2: Vérifie le code OTP et crée le compte
+ */
+export async function verifyEmailAndCreateAccount(email: string, code: string): Promise<SignupResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/auth/verify-email`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, code }),
+  });
+
+  const contentType = response.headers.get("content-type") ?? "";
+  const data = contentType.includes("application/json")
+    ? await response.json().catch(() => null)
+    : await response.text().catch(() => "");
+
+  if (!response.ok) {
+    const message =
+      typeof data === "object" && data && "message" in data
+        ? String(data.message)
+        : typeof data === "string" && data
+          ? data
+          : "Code de vérification invalide ou expiré.";
+
+    throw new Error(message);
+  }
+
+  return data as SignupResponse;
+}
+
+/**
+ * Renvoie un nouveau code de vérification
+ */
+export async function resendEmailVerification(email: string): Promise<EmailVerificationResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/auth/resend-verification`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  const contentType = response.headers.get("content-type") ?? "";
+  const data = contentType.includes("application/json")
+    ? await response.json().catch(() => null)
+    : await response.text().catch(() => "");
+
+  if (!response.ok) {
+    const message =
+      typeof data === "object" && data && "message" in data
+        ? String(data.message)
+        : typeof data === "string" && data
+          ? data
+          : "Impossible de renvoyer le code de vérification.";
+
+    throw new Error(message);
+  }
+
+  return data as EmailVerificationResponse;
 }
 
 export interface LoginRequest {
@@ -230,4 +338,69 @@ export async function loginAccount(payload: LoginRequest): Promise<LoginResponse
   }
 
   return data as LoginResponse;
+}
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface PasswordResetResponse {
+  message: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  motDePasse: string;
+}
+
+export async function requestPasswordReset(payload: ForgotPasswordPayload): Promise<PasswordResetResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const contentType = response.headers.get("content-type") ?? "";
+  const data = contentType.includes("application/json")
+    ? await response.json().catch(() => null)
+    : await response.text().catch(() => "");
+
+  if (!response.ok) {
+    const message =
+      typeof data === "object" && data && "message" in data
+        ? String((data as any).message)
+        : typeof data === "string" && data
+          ? data
+          : "Impossible d'envoyer le lien de réinitialisation pour le moment.";
+
+    throw new Error(message);
+  }
+
+  return data as PasswordResetResponse;
+}
+
+export async function resetPassword(payload: ResetPasswordPayload): Promise<PasswordResetResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const contentType = response.headers.get("content-type") ?? "";
+  const data = contentType.includes("application/json")
+    ? await response.json().catch(() => null)
+    : await response.text().catch(() => "");
+
+  if (!response.ok) {
+    const message =
+      typeof data === "object" && data && "message" in data
+        ? String((data as any).message)
+        : typeof data === "string" && data
+          ? data
+          : "Impossible de réinitialiser le mot de passe pour le moment.";
+
+    throw new Error(message);
+  }
+
+  return data as PasswordResetResponse;
 }

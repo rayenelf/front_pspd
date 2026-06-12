@@ -6,7 +6,7 @@ import Button from "@/components/ui/Button.vue";
 import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
 import { cn } from "@/lib/utils";
-import { registerAccount, googleSignupUrl, type ClientType, type SignupRole } from "@/lib/auth";
+import { sendEmailVerification, googleSignupUrl, type ClientType, type SignupRole } from "@/lib/auth";
 
 const router = useRouter();
 
@@ -54,7 +54,8 @@ async function submitSignup() {
   isSubmitting.value = true;
 
   try {
-    await registerAccount({
+    // Nouveau processus : envoyer le code de vérification d'email
+    await sendEmailVerification({
       role: role.value,
       type: form.type,
       nom: form.nom.trim(),
@@ -68,8 +69,11 @@ async function submitSignup() {
       categoriePrincipale: isPrestataire.value ? form.categoriePrincipale.trim() || undefined : undefined,
     });
 
-    successMessage.value = "Compte créé. Vérifie tes messages pour poursuivre la validation.";
-    await router.push("/auth/login");
+    // Rediriger vers la page de vérification d'email
+    await router.push({
+      path: "/auth/verify-email",
+      query: { email: form.email.trim() }
+    });
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : "Une erreur est survenue.";
   } finally {
