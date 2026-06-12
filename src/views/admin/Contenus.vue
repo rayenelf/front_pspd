@@ -1,39 +1,248 @@
 <script setup lang="ts">
+import { ref, reactive, onMounted, computed } from "vue";
 import PanelCard from "@/components/dashboard/PanelCard.vue";
 import Button from "@/components/ui/Button.vue";
 import Badge from "@/components/ui/Badge.vue";
+import Input from "@/components/ui/Input.vue";
+import Label from "@/components/ui/Label.vue";
+import { api, type CategorieData, type ServiceData, type ApiError } from "@/lib/api";
 
-const categories = ["Ménage", "Plomberie", "Électricité", "Jardinage", "Peinture", "Climatisation", "Serrurerie", "Déménagement"];
-const articles = [
-  { title: "Comment choisir un bon plombier ?", status: "Publié", date: "10/06" },
-  { title: "Guide ménage de printemps", status: "Brouillon", date: "08/06" },
-  { title: "Tarifs moyens électricien 2026", status: "Publié", date: "01/06" },
-];
+// ── État ─────────────────────────────────────────────────────────────────────
+const categories = ref<CategorieData[]>([]);
+const selectedId  = ref<string | null>(null);
+const services    = ref<ServiceData[]>([]);
+const loading     = ref(false);
+const feedback    = ref<{ type: "success" | "error"; text: string } | null>(null);
+
+/** Aplatit l'arbre en liste avec niveau d'indentation (pour le <select> parent). */
+const flatCategories = computed(() => {
+  const out: { id: string; libelle: string; depth: number }[] = [];
+  const walk = (nodes: CategorieData[], depth: number) => {
+    for (const n of nodes) {
+      out.push({ id: n.id, libelle: n.libelle, depth });
+      if (n.enfants?.length) walk(n.enfants, depth + 1);
+    }
+  };
+  walk(categories.value, 0);
+  return out;
+});
+
+const selectedLibelle = computed(
+  () => flatCategories.value.find((c) => c.id === selectedId.value)?.libelle ?? "",
+);
+
+function notify(type: "success" | "error", text: string) {
+  feedback.value = { type, text };
+  setTimeout(() => (feedback.value = null), 4000);
+}
+
+// ── Chargement ───────────────────────────────────────────────────────────────
+async function loadCategories() {
+  loading.value = true;
+  try {
+    categories.value = await api.getCategories();
+  } catch (e) {
+    notify("error", (e as ApiError).message || "Échec du chargement des catégories.");
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function selectCategory(id: string) {
+  selectedId.value = id;
+  services.value = [];
+  try {
+    services.value = await api.getCategoryServices(id);
+  } catch (e) {
+    notify("error", (e as ApiError).message || "Échec du chargement des services.");
+  }
+}
+
+onMounted(loadCategories);
+
+// ── Création catégorie ───────────────────────────────────────────────────────
+const catForm = reactive({ libelle: "", slug: "", parentId: "" });
+const catSaving = ref(false);
+
+/** Génère un slug à partir du libellé (minuscules, sans accents, tirets). */
+function autoSlug() {
+  if (catForm.slug) return;
+  catForm.slug = catForm.libelle
+    .toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+async function createCategory() {
+  if (!catForm.libelle || !catForm.slug) {
+    notify("error", "Libellé et slug requis.");
+    return;
+  }
+  catSaving.value = true;
+  try {
+    await api.createCategory(catForm.libelle, catForm.slug, catForm.parentId || undefined);
+    catForm.libelle = ""; catForm.slug = ""; catForm.parentId = "";
+    await loadCategories();
+    notify("success", "Catégorie créée.");
+  } catch (e) {
+    notify("error", (e as ApiError).message || "Échec de la création.");
+  } finally {
+    catSaving.value = false;
+  }
+}
+
+// ── Création service ─────────────────────────────────────────────────────────
+const svcForm = reactive({ libelle: "", description: "", prixIndicatif: "", unite: "" });
+const svcSaving = ref(false);
+
+async function createService() {
+  if (!selectedId.value) { notify("error", "Sélectionnez d'abord une catégorie."); return; }
+  if (!svcForm.libelle) { notify("error", "Libellé du service requis."); return; }
+  svcSaving.value = true;
+  try {
+    await api.createService({
+      categorieId:   selectedId.value,
+      libelle:       svcForm.libelle,
+      description:   svcForm.description || undefined,
+      prixIndicatif: svcForm.prixIndicatif ? Number(svcForm.prixIndicatif) : undefined,
+      unite:         svcForm.unite || undefined,
+    });
+    svcForm.libelle = ""; svcForm.description = ""; svcForm.prixIndicatif = ""; svcForm.unite = "";
+    await selectCategory(selectedId.value);
+    notify("success", "Service créé.");
+  } catch (e) {
+    notify("error", (e as ApiError).message || "Échec de la création.");
+  } finally {
+    svcSaving.value = false;
+  }
+}
+
+async function deleteService(id: string) {
+  try {
+    await api.deleteService(id);
+    if (selectedId.value) await selectCategory(selectedId.value);
+    notify("success", "Service désactivé.");
+  } catch (e) {
+    notify("error", (e as ApiError).message || "Échec de la désactivation.");
+  }
+}
 </script>
 
 <template>
-  <div class="grid gap-6 lg:grid-cols-2">
-    <PanelCard title="Catégories de services">
-      <template #action>
-        <Button size="sm" class="bg-gradient-warm text-primary-foreground">+ Ajouter</Button>
-      </template>
-      <div class="flex flex-wrap gap-2">
-        <Badge v-for="c in categories" :key="c" variant="secondary" class="px-3 py-1.5">{{ c }}</Badge>
-      </div>
-    </PanelCard>
-    <PanelCard title="Blog & articles">
-      <template #action>
-        <Button size="sm" variant="outline">Nouvel article</Button>
-      </template>
-      <ul class="divide-y divide-border">
-        <li v-for="a in articles" :key="a.title" class="flex items-center justify-between py-3">
-          <div>
-            <p class="font-medium">{{ a.title }}</p>
-            <p class="text-xs text-muted-foreground">{{ a.date }}</p>
+  <div class="space-y-6">
+    <!-- Feedback global -->
+    <p v-if="feedback" :class="[
+      'rounded-md px-3 py-2 text-sm font-medium',
+      feedback.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+    ]">{{ feedback.text }}</p>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      <!-- ── Catégories ───────────────────────────────────────────────── -->
+      <PanelCard title="Catégories de services">
+        <p v-if="loading" class="text-sm text-muted-foreground">Chargement…</p>
+        <p v-else-if="!flatCategories.length" class="text-sm text-muted-foreground">
+          Aucune catégorie. Créez-en une ci-dessous.
+        </p>
+        <div v-else class="flex flex-wrap gap-2">
+          <button
+            v-for="c in flatCategories"
+            :key="c.id"
+            type="button"
+            @click="selectCategory(c.id)"
+          >
+            <Badge
+              :variant="selectedId === c.id ? 'default' : 'secondary'"
+              class="cursor-pointer px-3 py-1.5"
+              :style="{ marginLeft: `${c.depth * 12}px` }"
+            >{{ c.libelle }}</Badge>
+          </button>
+        </div>
+
+        <!-- Formulaire nouvelle catégorie -->
+        <div class="mt-5 space-y-3 border-t border-border pt-4">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="space-y-2">
+              <Label>Libellé</Label>
+              <Input v-model="catForm.libelle" placeholder="Ex: Plomberie" @blur="autoSlug" />
+            </div>
+            <div class="space-y-2">
+              <Label>Slug</Label>
+              <Input v-model="catForm.slug" placeholder="plomberie" />
+            </div>
+            <div class="space-y-2 sm:col-span-2">
+              <Label>Catégorie parente (optionnel)</Label>
+              <select
+                v-model="catForm.parentId"
+                class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+              >
+                <option value="">— Racine —</option>
+                <option v-for="c in flatCategories" :key="c.id" :value="c.id">
+                  {{ "—".repeat(c.depth) }} {{ c.libelle }}
+                </option>
+              </select>
+            </div>
           </div>
-          <Badge :variant="a.status === 'Publié' ? 'default' : 'secondary'">{{ a.status }}</Badge>
-        </li>
-      </ul>
-    </PanelCard>
+          <Button
+            class="bg-gradient-warm text-primary-foreground"
+            :disabled="catSaving"
+            @click="createCategory"
+          >{{ catSaving ? "Création…" : "+ Ajouter la catégorie" }}</Button>
+        </div>
+      </PanelCard>
+
+      <!-- ── Services de la catégorie sélectionnée ────────────────────── -->
+      <PanelCard :title="selectedId ? `Services — ${selectedLibelle}` : 'Services'">
+        <p v-if="!selectedId" class="text-sm text-muted-foreground">
+          Sélectionnez une catégorie à gauche pour voir et gérer ses services.
+        </p>
+        <template v-else>
+          <ul v-if="services.length" class="space-y-2">
+            <li
+              v-for="s in services"
+              :key="s.id"
+              class="flex items-center justify-between rounded-lg border border-border p-3"
+            >
+              <div>
+                <p class="text-sm font-medium">{{ s.libelle }}</p>
+                <p class="text-xs text-muted-foreground">
+                  <span v-if="s.prixIndicatif">dès {{ s.prixIndicatif }} TND</span>
+                  <span v-if="s.unite"> · {{ s.unite }}</span>
+                </p>
+              </div>
+              <Button size="sm" variant="outline" @click="deleteService(s.id)">Désactiver</Button>
+            </li>
+          </ul>
+          <p v-else class="text-sm text-muted-foreground">Aucun service dans cette catégorie.</p>
+
+          <!-- Formulaire nouveau service -->
+          <div class="mt-4 space-y-3 border-t border-border pt-4">
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div class="space-y-2 sm:col-span-2">
+                <Label>Libellé du service</Label>
+                <Input v-model="svcForm.libelle" placeholder="Ex: Réparation fuite" />
+              </div>
+              <div class="space-y-2">
+                <Label>Prix indicatif (TND)</Label>
+                <Input v-model="svcForm.prixIndicatif" type="number" min="0" placeholder="150" />
+              </div>
+              <div class="space-y-2">
+                <Label>Unité</Label>
+                <Input v-model="svcForm.unite" placeholder="intervention, heure…" />
+              </div>
+              <div class="space-y-2 sm:col-span-2">
+                <Label>Description</Label>
+                <Input v-model="svcForm.description" placeholder="Courte description" />
+              </div>
+            </div>
+            <Button
+              class="bg-gradient-warm text-primary-foreground"
+              :disabled="svcSaving"
+              @click="createService"
+            >{{ svcSaving ? "Création…" : "+ Ajouter le service" }}</Button>
+          </div>
+        </template>
+      </PanelCard>
+    </div>
   </div>
 </template>

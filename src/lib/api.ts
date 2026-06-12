@@ -135,6 +135,67 @@ export interface DocumentData {
   verifieLe: string | null;
 }
 
+// ── Catalogue & recherche (Epic B) ──────────────────────────────────────────
+
+export interface CategorieData {
+  id: string;
+  libelle: string;
+  slug: string;
+  enfants: CategorieData[];
+}
+
+export interface ServiceData {
+  id: string;
+  categorieId: string;
+  libelle: string;
+  description: string | null;
+  prixIndicatif: number | null;
+  unite: string | null;
+}
+
+export interface SearchResultItem {
+  prestataireId: string;
+  nomCommercial: string;
+  categoriePrincipale: string | null;
+  note: number;
+  certifie: boolean;
+  langues: string | null;
+  zoneIntervention: string | null;
+  rayonKm: number;
+  prixIndicatif: number | null;
+  distanceKm: number | null;
+  etaMin: number | null;
+}
+
+export interface Page<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface SearchParams {
+  service?: string;
+  prixMax?: number;
+  noteMin?: number;
+  certifie?: boolean;
+  langue?: string;
+  tri?: "mieuxNote" | "moinsCher";
+  page?: number;
+  size?: number;
+}
+
+/** Construit une query string en ignorant les valeurs vides/indéfinies. */
+function toQuery(params: Record<string, unknown>): string {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== "") q.set(k, String(v));
+  }
+  const s = q.toString();
+  return s ? `?${s}` : "";
+}
+
 // ── Endpoints ──────────────────────────────────────────────────────────────
 
 export const api = {
@@ -220,4 +281,48 @@ export const api = {
   /** Suppression de compte (RGPD, #6). */
   deleteAccount: (password?: string): Promise<void> =>
     apiFetch("/api/users/me", { method: "DELETE", body: JSON.stringify({ password }) }),
+
+  // ── Catalogue & recherche (Epic B) ─────────────────────────────────────────
+
+  /** Arbre des catégories actives — public (B1). */
+  getCategories: (): Promise<CategorieData[]> =>
+    apiFetch("/api/categories"),
+
+  /** Services actifs d'une catégorie — public (B1). */
+  getCategoryServices: (categorieId: string): Promise<ServiceData[]> =>
+    apiFetch(`/api/categories/${categorieId}/services`),
+
+  /** Recherche multi-critères de prestataires — public (B2/B3). */
+  search: (params: SearchParams = {}): Promise<Page<SearchResultItem>> =>
+    apiFetch(`/api/search${toQuery(params as Record<string, unknown>)}`),
+
+  /** Crée une catégorie — ADMIN (B5). */
+  createCategory: (libelle: string, slug: string, parentId?: string): Promise<CategorieData> =>
+    apiFetch("/api/categories", {
+      method: "POST",
+      body: JSON.stringify({ libelle, slug, parentId }),
+    }),
+
+  /** Crée un service dans une catégorie — ADMIN (B5). */
+  createService: (data: {
+    categorieId: string;
+    libelle: string;
+    description?: string;
+    prixIndicatif?: number;
+    unite?: string;
+  }): Promise<ServiceData> =>
+    apiFetch("/api/services", { method: "POST", body: JSON.stringify(data) }),
+
+  /** Met à jour un service — ADMIN (B5). */
+  updateService: (id: string, data: Partial<{
+    libelle: string;
+    description: string;
+    prixIndicatif: number;
+    unite: string;
+  }>): Promise<ServiceData> =>
+    apiFetch(`/api/services/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+
+  /** Désactive (suppression logique) un service — ADMIN (B5). */
+  deleteService: (id: string): Promise<void> =>
+    apiFetch(`/api/services/${id}`, { method: "DELETE" }),
 };
