@@ -112,6 +112,16 @@ export interface AuthResponse {
   refreshToken: string;
   expiresIn: number;
   role: string;
+  deviceToken?: string;
+}
+
+export interface SessionData {
+  sid: string;
+  device: string;
+  ip: string;
+  createdAt: string;
+  lastSeenAt: string;
+  current: boolean;
 }
 
 export type TypeDocument =
@@ -141,9 +151,12 @@ export const api = {
   send2faOtp: (email: string): Promise<void> =>
     apiFetch("/api/auth/2fa/send", { method: "POST", body: JSON.stringify({ email }) }),
 
-  /** Vérifie le code OTP et retourne les tokens JWT — endpoint public. */
-  verify2fa: (email: string, code: string): Promise<AuthResponse> =>
-    apiFetch("/api/auth/2fa/verify", { method: "POST", body: JSON.stringify({ email, code }) }),
+  /** Vérifie le code OTP et retourne les tokens JWT (+ device-token si rememberDevice). */
+  verify2fa: (email: string, code: string, rememberDevice = false): Promise<AuthResponse> =>
+    apiFetch("/api/auth/2fa/verify", {
+      method: "POST",
+      body: JSON.stringify({ email, code, rememberDevice }),
+    }),
 
   /** Active ou désactive la 2FA — endpoint protégé (nécessite B5). */
   toggle2fa: (active: boolean): Promise<void> =>
@@ -175,4 +188,18 @@ export const api = {
     form.append("file", file);
     return apiFetch("/api/prestataires/me/documents", { method: "POST", body: form });
   },
+
+  /** Sessions/appareils de l'utilisateur (#3). */
+  getSessions: (): Promise<SessionData[]> =>
+    apiFetch("/api/users/me/sessions"),
+
+  revokeSession: (sid: string): Promise<void> =>
+    apiFetch(`/api/users/me/sessions/${sid}`, { method: "DELETE" }),
+
+  logoutAllSessions: (): Promise<void> =>
+    apiFetch("/api/users/me/sessions/logout-all", { method: "POST" }),
+
+  /** Suppression de compte (RGPD, #6). */
+  deleteAccount: (password?: string): Promise<void> =>
+    apiFetch("/api/users/me", { method: "DELETE", body: JSON.stringify({ password }) }),
 };
