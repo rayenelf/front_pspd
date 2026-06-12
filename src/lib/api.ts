@@ -177,6 +177,14 @@ export const api = {
   resendVerification: (email: string): Promise<void> =>
     apiFetch("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email }) }),
 
+  /** Demande un lien de réinitialisation de mot de passe — endpoint public. */
+  forgotPassword: (email: string): Promise<void> =>
+    apiFetch("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
+
+  /** Applique le nouveau mot de passe via le token reçu — endpoint public. */
+  resetPassword: (token: string, newPassword: string): Promise<void> =>
+    apiFetch("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, newPassword }) }),
+
   /** Documents légaux du prestataire courant (B9). */
   getDocuments: (): Promise<DocumentData[]> =>
     apiFetch("/api/prestataires/me/documents"),
