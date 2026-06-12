@@ -144,6 +144,16 @@ export const api = {
   patchMe: (data: UpdateUserPayload): Promise<UserData> =>
     apiFetch("/api/users/me", { method: "PATCH", body: JSON.stringify(data) }),
 
+  /** Change le mot de passe (connecté). currentPassword optionnel pour compte OAuth. */
+  changePassword: (currentPassword: string | undefined, newPassword: string): Promise<void> =>
+    apiFetch("/api/users/me/password", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+
+  /** Force le rafraîchissement des tokens (ex. après mise à jour du profil → JWT à jour). */
+  refreshTokens: (): Promise<boolean> => tryRefresh(),
+
   patchPrestataire: (data: UpdatePrestatairePayload): Promise<void> =>
     apiFetch("/api/prestataires/me", { method: "PATCH", body: JSON.stringify(data) }),
 
