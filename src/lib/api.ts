@@ -186,6 +186,34 @@ export interface SearchParams {
   size?: number;
 }
 
+// ── Admin — validation prestataires (B9) ────────────────────────────────────
+
+export type StatutValidation = "EN_ATTENTE" | "VERIFICATION" | "VALIDE" | "SUSPENDU";
+
+export interface AdminPrestataireData {
+  userId: string;
+  email: string;
+  prenom: string | null;
+  nom: string | null;
+  telephone: string;
+  nomCommercial: string;
+  categoriePrincipale: string | null;
+  zoneIntervention: string | null;
+  statutValidation: StatutValidation;
+  certifie: boolean;
+  noteMoyenne: number;
+  inscritLe: string;
+  documents: DocumentData[];
+}
+
+export interface PrestataireStats {
+  enAttente: number;
+  enVerification: number;
+  valides: number;
+  suspendus: number;
+  total: number;
+}
+
 /** Construit une query string en ignorant les valeurs vides/indéfinies. */
 function toQuery(params: Record<string, unknown>): string {
   const q = new URLSearchParams();
@@ -325,4 +353,39 @@ export const api = {
   /** Désactive (suppression logique) un service — ADMIN (B5). */
   deleteService: (id: string): Promise<void> =>
     apiFetch(`/api/services/${id}`, { method: "DELETE" }),
+
+  // ── Admin — validation prestataires (B9) ───────────────────────────────────
+
+  /** Compteurs de prestataires par statut — ADMIN. */
+  adminPrestataireStats: (): Promise<PrestataireStats> =>
+    apiFetch("/api/admin/prestataires/stats"),
+
+  /** Liste des prestataires (filtre statut optionnel) — ADMIN. */
+  adminListPrestataires: (statut?: StatutValidation): Promise<AdminPrestataireData[]> =>
+    apiFetch(`/api/admin/prestataires${statut ? `?statut=${statut}` : ""}`),
+
+  /** Décision de validation (VALIDE / SUSPENDU / VERIFICATION / EN_ATTENTE) — ADMIN. */
+  adminDecideValidation: (
+    prestataireId: string,
+    statut: StatutValidation,
+    motif?: string,
+  ): Promise<AdminPrestataireData> =>
+    apiFetch(`/api/admin/prestataires/${prestataireId}/validation`, {
+      method: "PATCH",
+      body: JSON.stringify({ statut, motif }),
+    }),
+
+  /**
+   * Récupère un document légal et renvoie une URL blob à ouvrir/visualiser — ADMIN.
+   * Passe par fetch authentifié (le JWT est dans l'en-tête, pas dans l'URL) :
+   * ouvrir directement l'URL dans un onglet ne transmettrait pas le token.
+   */
+  adminViewDocument: async (documentId: string): Promise<string> => {
+    const token = getAccessToken();
+    const res = await fetch(`${BASE}/api/admin/documents/${documentId}/file`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new ApiError(res.status, "Impossible d'ouvrir le document.");
+    return URL.createObjectURL(await res.blob());
+  },
 };
