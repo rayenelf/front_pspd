@@ -144,6 +144,16 @@ export const api = {
   patchMe: (data: UpdateUserPayload): Promise<UserData> =>
     apiFetch("/api/users/me", { method: "PATCH", body: JSON.stringify(data) }),
 
+  /** Change le mot de passe (connecté). currentPassword optionnel pour compte OAuth. */
+  changePassword: (currentPassword: string | undefined, newPassword: string): Promise<void> =>
+    apiFetch("/api/users/me/password", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+
+  /** Force le rafraîchissement des tokens (ex. après mise à jour du profil → JWT à jour). */
+  refreshTokens: (): Promise<boolean> => tryRefresh(),
+
   patchPrestataire: (data: UpdatePrestatairePayload): Promise<void> =>
     apiFetch("/api/prestataires/me", { method: "PATCH", body: JSON.stringify(data) }),
 
@@ -176,6 +186,14 @@ export const api = {
   /** Renvoie un lien de vérification d'email — endpoint public. */
   resendVerification: (email: string): Promise<void> =>
     apiFetch("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email }) }),
+
+  /** Demande un lien de réinitialisation de mot de passe — endpoint public. */
+  forgotPassword: (email: string): Promise<void> =>
+    apiFetch("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
+
+  /** Applique le nouveau mot de passe via le token reçu — endpoint public. */
+  resetPassword: (token: string, newPassword: string): Promise<void> =>
+    apiFetch("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, newPassword }) }),
 
   /** Documents légaux du prestataire courant (B9). */
   getDocuments: (): Promise<DocumentData[]> =>
