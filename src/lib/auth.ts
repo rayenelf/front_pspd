@@ -45,9 +45,21 @@ export function getDeviceToken(): string | null {
   return localStorage.getItem(DEVICE_KEY);
 }
 
+/**
+ * Événement émis à chaque écriture/purge des tokens DANS CET ONGLET.
+ * (L'événement natif `storage` ne couvre que les autres onglets.)
+ * Le store Pinia l'écoute pour rester synchronisé avec le localStorage.
+ */
+export const SESSION_CHANGED_EVENT = "pspd:session-changed";
+
+function notifySessionChanged(): void {
+  window.dispatchEvent(new Event(SESSION_CHANGED_EVENT));
+}
+
 export function saveSession(accessToken: string, refreshToken: string): void {
   localStorage.setItem(TOKEN_KEY, accessToken);
   localStorage.setItem(REFRESH_KEY, refreshToken);
+  notifySessionChanged();
 }
 
 export function getAccessToken(): string | null {
@@ -61,6 +73,7 @@ export function getRefreshToken(): string | null {
 export function clearSession(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_KEY);
+  notifySessionChanged();
 }
 
 /** Décode le payload d'un JWT (sans vérifier la signature — usage front uniquement). */
@@ -84,7 +97,9 @@ export function getRole(): Role | null {
 
 /**
  * Vrai si un access token valide et non expiré est présent.
- * Vérifie le claim `exp` (secondes epoch) ; un token expiré est purgé.
+ * Ne purge PAS la session si l'access token est expiré : le refresh token
+ * (7 j) permet d'en obtenir un nouveau silencieusement — c'est le rôle du
+ * garde de route et du client HTTP, pas de cette fonction.
  */
 export function isAuthenticated(): boolean {
   const token = getAccessToken();
@@ -92,11 +107,7 @@ export function isAuthenticated(): boolean {
   const claims = decodeJwt(token);
   if (!claims) return false;
   const exp = claims.exp as number | undefined;
-  if (exp && exp * 1000 < Date.now()) {
-    clearSession();
-    return false;
-  }
-  return true;
+  return !exp || exp * 1000 >= Date.now();
 }
 
 /** Route de destination selon le rôle après login. */

@@ -1,5 +1,12 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
-import { isAuthenticated, getRole, homeRouteForRole, type Role } from "@/lib/auth";
+import {
+  isAuthenticated,
+  getRole,
+  getRefreshToken,
+  clearSession,
+  homeRouteForRole,
+  type Role,
+} from "@/lib/auth";
 
 // `meta.roles` : si présent, route protégée — seuls ces rôles y accèdent.
 // Absent → route publique.
@@ -72,16 +79,25 @@ export const router = createRouter({
 });
 
 // ── Garde d'authentification + autorisation par rôle (F4 — Majd) ─────────────
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   // Rôles requis = ceux déclarés sur la route la plus profonde qui en a.
   const required = to.matched.find((r) => r.meta.roles)?.meta.roles;
 
   // Route publique → libre.
   if (!required) return true;
 
-  // Protégée mais non authentifié → login (avec retour après connexion).
+  // Access token absent/expiré : tenter un refresh silencieux avant de
+  // renvoyer au login — le refresh token reste valable 7 jours.
   if (!isAuthenticated()) {
-    return { path: "/auth/login", query: { redirect: to.fullPath } };
+    let refreshed = false;
+    if (getRefreshToken()) {
+      const { api } = await import("@/lib/api"); // import dynamique : évite le cycle router ↔ api
+      refreshed = await api.refreshTokens().catch(() => false);
+    }
+    if (!refreshed) {
+      clearSession(); // tokens morts → purge propre avant le login
+      return { path: "/auth/login", query: { redirect: to.fullPath } };
+    }
   }
 
   // Authentifié mais mauvais rôle → renvoyé vers son propre espace.
