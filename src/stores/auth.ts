@@ -25,6 +25,16 @@ export const useAuthStore = defineStore("auth", () => {
   // ── État ───────────────────────────────────────────────────────────────────
   const user = ref<UserInfo | null>(getCurrentUser());
 
+  // Le localStorage est partagé entre onglets : si on se connecte avec un autre
+  // compte dans un second onglet, cet onglet-ci enverrait les nouveaux tokens
+  // tout en affichant l'ancien utilisateur. On resynchronise l'état dès que
+  // les tokens changent ailleurs.
+  window.addEventListener("storage", (e) => {
+    if (e.key === null || e.key.includes("token")) {
+      user.value = tokenIsValid() ? getCurrentUser() : null;
+    }
+  });
+
   // ── Getters ────────────────────────────────────────────────────────────────
   const isAuthenticated = computed(() => user.value !== null && tokenIsValid());
   const role            = computed<Role | null>(() => user.value?.role ?? null);
