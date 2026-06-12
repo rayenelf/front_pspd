@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import PanelCard from "@/components/dashboard/PanelCard.vue";
 import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
@@ -7,8 +7,13 @@ import Textarea from "@/components/ui/Textarea.vue";
 import Button from "@/components/ui/Button.vue";
 import Badge from "@/components/ui/Badge.vue";
 import Switch from "@/components/ui/Switch.vue";
+import SessionsPanel from "@/components/account/SessionsPanel.vue";
+import DangerZone from "@/components/account/DangerZone.vue";
 import { getCurrentUser, getInitials, getDisplayName } from "@/lib/auth";
-import { api, type ApiError } from "@/lib/api";
+import { useAuthStore } from "@/stores/auth";
+import { api, type ApiError, type DocumentData, type TypeDocument } from "@/lib/api";
+
+const auth = useAuthStore();
 
 // ── Données depuis JWT ─────────────────────────────────────────────────────
 const user = getCurrentUser();
@@ -27,12 +32,66 @@ const proForm = reactive({
   langues:            "",
 });
 
-const docs: [string, string][] = [
-  ["Pièce d'identité",          "Vérifiée"],
-  ["Attestation RC pro",        "Vérifiée"],
-  ["Certificat de qualification","En attente"],
-  ["RIB",                       "Vérifié"],
+// ── Documents légaux (B9) ───────────────────────────────────────────────────
+const DOC_TYPES: { value: TypeDocument; label: string }[] = [
+  { value: "CIN",                 label: "Pièce d'identité (CIN)" },
+  { value: "PATENTE_RC",          label: "Patente / RC" },
+  { value: "ATTESTATION_FISCALE", label: "Attestation fiscale" },
+  { value: "ASSURANCE_RC",        label: "Assurance RC pro" },
+  { value: "DIPLOME",             label: "Diplôme / certification" },
 ];
+
+const STATUT_LABEL: Record<string, string> = {
+  EN_ATTENTE:   "En attente",
+  VERIFICATION: "En vérification",
+  VALIDE:       "Validé",
+  SUSPENDU:     "Refusé",
+};
+
+const docs       = ref<DocumentData[]>([]);
+const docType    = ref<TypeDocument>("CIN");
+const docFile    = ref<File | null>(null);
+const uploading  = ref(false);
+const docMessage = ref<{ type: "success" | "error"; text: string } | null>(null);
+
+function typeLabel(t: string) {
+  return DOC_TYPES.find((d) => d.value === t)?.label ?? t;
+}
+
+function onFileChange(e: Event) {
+  const target = e.target as HTMLInputElement;
+  docFile.value = target.files?.[0] ?? null;
+}
+
+async function loadDocuments() {
+  try {
+    docs.value = await api.getDocuments();
+  } catch {
+    /* silencieux : l'utilisateur verra l'erreur à l'upload si besoin */
+  }
+}
+
+async function uploadDoc() {
+  if (!docFile.value) {
+    docMessage.value = { type: "error", text: "Choisissez un fichier." };
+    return;
+  }
+  uploading.value  = true;
+  docMessage.value = null;
+  try {
+    const created = await api.uploadDocument(docType.value, docFile.value);
+    docs.value.push(created);
+    docFile.value    = null;
+    docMessage.value = { type: "success", text: "Document déposé — en attente de validation." };
+  } catch (e) {
+    const err = e as ApiError;
+    docMessage.value = { type: "error", text: err.message || "Échec de l'envoi du document." };
+  } finally {
+    uploading.value = false;
+  }
+}
+
+onMounted(loadDocuments);
 
 // ── Feedback ───────────────────────────────────────────────────────────────
 const saving  = ref(false);
@@ -56,6 +115,8 @@ async function save() {
         langues:             proForm.langues             || undefined,
       }),
     ]);
+    await api.refreshTokens();   // JWT à jour → header reflète le nouveau nom
+    auth.refreshFromStorage();
     message.value = { type: "success", text: "Profil mis à jour avec succès." };
   } catch (e) {
     const err = e as ApiError;
@@ -67,6 +128,40 @@ async function save() {
     };
   } finally {
     saving.value = false;
+  }
+}
+
+// ── Changement de mot de passe ──────────────────────────────────────────────
+const pwd     = ref("");
+const newPwd  = ref("");
+const confPwd = ref("");
+const pwdSaving  = ref(false);
+const pwdMessage = ref<{ type: "success" | "error"; text: string } | null>(null);
+const isOAuth = !user?.prenom && !!user?.email;
+
+async function changePassword() {
+  pwdMessage.value = null;
+  if (newPwd.value.length < 8) {
+    pwdMessage.value = { type: "error", text: "Le nouveau mot de passe doit faire au moins 8 caractères." };
+    return;
+  }
+  if (newPwd.value !== confPwd.value) {
+    pwdMessage.value = { type: "error", text: "Les mots de passe ne correspondent pas." };
+    return;
+  }
+  pwdSaving.value = true;
+  try {
+    await api.changePassword(pwd.value || undefined, newPwd.value);
+    pwd.value = ""; newPwd.value = ""; confPwd.value = "";
+    pwdMessage.value = { type: "success", text: "Mot de passe mis à jour. Vos autres appareils ont été déconnectés." };
+  } catch (e) {
+    const err = e as ApiError;
+    pwdMessage.value = {
+      type: "error",
+      text: err.status === 403 ? "Mot de passe actuel incorrect." : (err.message || "Erreur lors du changement."),
+    };
+  } finally {
+    pwdSaving.value = false;
   }
 }
 
@@ -176,17 +271,92 @@ async function toggle2fa(active: boolean) {
 
       <!-- Documents -->
       <PanelCard title="Documents & vérification">
-        <ul class="space-y-2 text-sm">
+        <ul v-if="docs.length" class="space-y-2 text-sm">
           <li
-            v-for="[l, s] in docs"
-            :key="l"
+            v-for="d in docs"
+            :key="d.id"
             class="flex items-center justify-between rounded-lg border border-border p-3"
           >
-            <span>{{ l }}</span>
-            <Badge :variant="s === 'En attente' ? 'secondary' : 'default'">{{ s }}</Badge>
+            <span>{{ typeLabel(d.type) }}</span>
+            <Badge :variant="d.statut === 'VALIDE' ? 'default' : 'secondary'">
+              {{ STATUT_LABEL[d.statut] ?? d.statut }}
+            </Badge>
           </li>
         </ul>
+        <p v-else class="text-sm text-muted-foreground">Aucun document déposé pour le moment.</p>
+
+        <!-- Dépôt d'un document -->
+        <div class="mt-4 space-y-3 border-t border-border pt-4">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="space-y-2">
+              <Label>Type de document</Label>
+              <select
+                v-model="docType"
+                class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+              >
+                <option v-for="t in DOC_TYPES" :key="t.value" :value="t.value">{{ t.label }}</option>
+              </select>
+            </div>
+            <div class="space-y-2">
+              <Label>Fichier</Label>
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                class="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium"
+                @change="onFileChange"
+              />
+            </div>
+          </div>
+
+          <p v-if="docMessage" :class="[
+            'rounded-md px-3 py-2 text-sm font-medium',
+            docMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          ]">{{ docMessage.text }}</p>
+
+          <Button
+            class="bg-gradient-warm text-primary-foreground"
+            :disabled="uploading"
+            @click="uploadDoc"
+          >
+            {{ uploading ? "Envoi…" : "Déposer le document" }}
+          </Button>
+        </div>
       </PanelCard>
+
+      <!-- Sécurité — mot de passe -->
+      <PanelCard title="Sécurité">
+        <div v-if="isOAuth" class="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          Compte lié à un fournisseur (Google/Facebook). Vous pouvez définir un mot de passe
+          local ci-dessous (champ « actuel » non requis).
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div v-if="!isOAuth" class="space-y-2 sm:col-span-2">
+            <Label>Mot de passe actuel</Label>
+            <Input v-model="pwd" type="password" placeholder="••••••••" autocomplete="current-password" />
+          </div>
+          <div class="space-y-2">
+            <Label>Nouveau mot de passe</Label>
+            <Input v-model="newPwd" type="password" placeholder="Minimum 8 caractères" autocomplete="new-password" />
+          </div>
+          <div class="space-y-2">
+            <Label>Confirmer</Label>
+            <Input v-model="confPwd" type="password" placeholder="Retapez le mot de passe" autocomplete="new-password" />
+          </div>
+        </div>
+        <p v-if="pwdMessage" :class="[
+          'mt-3 rounded-md px-3 py-2 text-sm font-medium',
+          pwdMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+        ]">{{ pwdMessage.text }}</p>
+        <Button variant="outline" class="mt-5" :disabled="pwdSaving" @click="changePassword">
+          {{ pwdSaving ? "Mise à jour…" : "Mettre à jour le mot de passe" }}
+        </Button>
+      </PanelCard>
+
+      <!-- Appareils connectés (#3) -->
+      <SessionsPanel />
+
+      <!-- Suppression de compte (#6) -->
+      <DangerZone />
     </div>
 
     <!-- Statut compte -->

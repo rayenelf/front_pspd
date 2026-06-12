@@ -11,6 +11,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8081";
 
 const TOKEN_KEY = "pspd_access_token";
 const REFRESH_KEY = "pspd_refresh_token";
+const DEVICE_KEY = "pspd_device_token";
 
 export type Role = "CLIENT" | "PRESTATAIRE" | "ADMIN" | "SUPER_ADMIN";
 
@@ -23,6 +24,25 @@ export function googleLoginUrl(): string {
 export function googleSignupUrl(role: "client" | "pro"): string {
   const backendRole = role === "pro" ? "PRESTATAIRE" : "CLIENT";
   return `${API_BASE}/api/auth/oauth2/google?role=${backendRole}`;
+}
+
+/** Login Facebook — utilisateur existant (#7). */
+export function facebookLoginUrl(): string {
+  return `${API_BASE}/oauth2/authorization/facebook`;
+}
+
+/** Signup Facebook — nouveau compte avec rôle pré-sélectionné (#7). */
+export function facebookSignupUrl(role: "client" | "pro"): string {
+  const backendRole = role === "pro" ? "PRESTATAIRE" : "CLIENT";
+  return `${API_BASE}/api/auth/oauth2/facebook?role=${backendRole}`;
+}
+
+/** Device-token « se souvenir de cet appareil » (#4) — persiste entre les sessions. */
+export function saveDeviceToken(token: string): void {
+  localStorage.setItem(DEVICE_KEY, token);
+}
+export function getDeviceToken(): string | null {
+  return localStorage.getItem(DEVICE_KEY);
 }
 
 export function saveSession(accessToken: string, refreshToken: string): void {
@@ -315,9 +335,13 @@ export interface LoginResponse {
 }
 
 export async function loginAccount(payload: LoginRequest): Promise<LoginResponse> {
+  const deviceToken = getDeviceToken();
   const response = await fetch(`${getApiBaseUrl()}/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(deviceToken ? { "X-Device-Token": deviceToken } : {}),
+    },
     body: JSON.stringify(payload),
   });
 

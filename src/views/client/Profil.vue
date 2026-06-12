@@ -5,8 +5,13 @@ import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
 import Button from "@/components/ui/Button.vue";
 import Switch from "@/components/ui/Switch.vue";
+import SessionsPanel from "@/components/account/SessionsPanel.vue";
+import DangerZone from "@/components/account/DangerZone.vue";
 import { getCurrentUser, getInitials, getDisplayName } from "@/lib/auth";
-import { api, type ApiError, type UserData } from "@/lib/api";
+import { useAuthStore } from "@/stores/auth";
+import { api, type ApiError } from "@/lib/api";
+
+const auth = useAuthStore();
 
 // ── Données utilisateur depuis le JWT ──────────────────────────────────────
 const user = getCurrentUser();
@@ -19,8 +24,38 @@ const form = reactive({
   adresse: "",   // table adresses — Phase 2
 });
 
-const pwd    = ref("");
-const newPwd = ref("");
+const pwd     = ref("");
+const newPwd  = ref("");
+const confPwd = ref("");
+const pwdSaving  = ref(false);
+const pwdMessage = ref<{ type: "success" | "error"; text: string } | null>(null);
+const isOAuth = !user?.prenom && !!user?.email; // compte sans mot de passe local (heuristique)
+
+async function changePassword() {
+  pwdMessage.value = null;
+  if (newPwd.value.length < 8) {
+    pwdMessage.value = { type: "error", text: "Le nouveau mot de passe doit faire au moins 8 caractères." };
+    return;
+  }
+  if (newPwd.value !== confPwd.value) {
+    pwdMessage.value = { type: "error", text: "Les mots de passe ne correspondent pas." };
+    return;
+  }
+  pwdSaving.value = true;
+  try {
+    await api.changePassword(pwd.value || undefined, newPwd.value);
+    pwd.value = ""; newPwd.value = ""; confPwd.value = "";
+    pwdMessage.value = { type: "success", text: "Mot de passe mis à jour. Vos autres appareils ont été déconnectés." };
+  } catch (e) {
+    const err = e as ApiError;
+    pwdMessage.value = {
+      type: "error",
+      text: err.status === 403 ? "Mot de passe actuel incorrect." : (err.message || "Erreur lors du changement."),
+    };
+  } finally {
+    pwdSaving.value = false;
+  }
+}
 
 const prefs = ref([
   { label: "Emails de confirmation", value: true },
@@ -42,6 +77,9 @@ async function save() {
       nom:       form.nom       || undefined,
       telephone: form.tel       || undefined,
     });
+    // Rafraîchit le JWT pour que le nom affiché (header) reflète les changements.
+    await api.refreshTokens();
+    auth.refreshFromStorage();
     message.value = { type: "success", text: "Profil mis à jour avec succès." };
   } catch (e) {
     const err = e as ApiError;
@@ -147,20 +185,33 @@ async function toggle2fa(active: boolean) {
 
       <!-- Sécurité -->
       <PanelCard title="Sécurité">
-        <div v-if="!user?.prenom && user?.email" class="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
-          Votre compte est lié à Google — vous n'avez pas de mot de passe local.
+        <div v-if="isOAuth" class="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          Votre compte est lié à un fournisseur (Google/Facebook). Vous pouvez définir
+          un mot de passe local ci-dessous (le champ « actuel » n'est pas requis).
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
-          <div class="space-y-2">
+          <div v-if="!isOAuth" class="space-y-2 sm:col-span-2">
             <Label>Mot de passe actuel</Label>
-            <Input v-model="pwd" type="password" placeholder="••••••••" />
+            <Input v-model="pwd" type="password" placeholder="••••••••" autocomplete="current-password" />
           </div>
           <div class="space-y-2">
             <Label>Nouveau mot de passe</Label>
-            <Input v-model="newPwd" type="password" placeholder="Minimum 8 caractères" />
+            <Input v-model="newPwd" type="password" placeholder="Minimum 8 caractères" autocomplete="new-password" />
+          </div>
+          <div class="space-y-2">
+            <Label>Confirmer</Label>
+            <Input v-model="confPwd" type="password" placeholder="Retapez le mot de passe" autocomplete="new-password" />
           </div>
         </div>
-        <Button variant="outline" class="mt-5" disabled>Mettre à jour</Button>
+
+        <p v-if="pwdMessage" :class="[
+          'mt-3 rounded-md px-3 py-2 text-sm font-medium',
+          pwdMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+        ]">{{ pwdMessage.text }}</p>
+
+        <Button variant="outline" class="mt-5" :disabled="pwdSaving" @click="changePassword">
+          {{ pwdSaving ? "Mise à jour…" : "Mettre à jour le mot de passe" }}
+        </Button>
 
         <!-- Double authentification -->
         <div class="mt-6 border-t border-border pt-5">
@@ -183,6 +234,12 @@ async function toggle2fa(active: boolean) {
           ]">{{ twoFaMessage.text }}</p>
         </div>
       </PanelCard>
+
+      <!-- Appareils connectés (#3) -->
+      <SessionsPanel />
+
+      <!-- Suppression de compte (#6) -->
+      <DangerZone />
     </div>
 
     <!-- Préférences -->

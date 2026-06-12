@@ -22,6 +22,7 @@ const routes: RouteRecordRaw[] = [
   { path: "/auth/reset-password", component: () => import("@/views/auth/ResetPassword.vue") },
   { path: "/auth/callback", component: () => import("@/views/auth/OAuthCallback.vue") },
   { path: "/auth/2fa", component: () => import("@/views/auth/Verify2fa.vue") },
+  { path: "/auth/verify-email", component: () => import("@/views/auth/VerifyEmail.vue") },
   {
     path: "/client",
     component: () => import("@/views/client/ClientLayout.vue"),

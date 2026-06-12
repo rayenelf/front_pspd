@@ -5,31 +5,22 @@ import AuthLayout from "@/components/auth/AuthLayout.vue";
 import Button from "@/components/ui/Button.vue";
 import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
-import { requestPasswordReset } from "@/lib/auth";
+import { api } from "@/lib/api";
 
 const email = ref("");
-const isSubmitting = ref(false);
-const errorMessage = ref("");
-const successMessage = ref("");
+const submitting = ref(false);
+const sent = ref(false);
 
-async function submitForgotPassword() {
-  errorMessage.value = "";
-  successMessage.value = "";
-
-  if (!email.value.trim()) {
-    errorMessage.value = "Email requis.";
-    return;
-  }
-
-  isSubmitting.value = true;
-
+async function submit() {
+  if (!email.value) return;
+  submitting.value = true;
   try {
-    const response = await requestPasswordReset({ email: email.value.trim() });
-    successMessage.value = response.message;
-  } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "Une erreur est survenue.";
+    await api.forgotPassword(email.value.trim());
+  } catch {
+    /* réponse 204 quoi qu'il arrive — pas de fuite sur l'existence du compte */
   } finally {
-    isSubmitting.value = false;
+    submitting.value = false;
+    sent.value = true; // on affiche toujours le même message
   }
 }
 </script>
@@ -39,17 +30,31 @@ async function submitForgotPassword() {
     title="Mot de passe oublié ?"
     subtitle="Entrez votre email pour recevoir un lien de réinitialisation."
   >
-    <form class="space-y-4" @submit.prevent="submitForgotPassword">
+    <div v-if="sent" class="space-y-4 text-center">
+      <div class="grid h-14 w-14 mx-auto place-items-center rounded-full bg-green-100 text-2xl">📧</div>
+      <p class="text-sm text-muted-foreground">
+        Si un compte existe pour <span class="font-medium text-foreground">{{ email }}</span>,
+        un lien de réinitialisation vient d'être envoyé. Vérifiez votre boîte mail (et vos spams).
+      </p>
+      <RouterLink to="/auth/login">
+        <Button class="bg-gradient-warm text-primary-foreground">Retour à la connexion</Button>
+      </RouterLink>
+    </div>
+
+    <form v-else class="space-y-4" @submit.prevent="submit">
       <div class="space-y-2">
         <Label for="em">Email</Label>
         <Input id="em" v-model="email" type="email" placeholder="vous@exemple.ma" />
       </div>
-      <p v-if="errorMessage" class="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">{{ errorMessage }}</p>
-      <p v-else-if="successMessage" class="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">{{ successMessage }}</p>
-      <Button type="submit" class="w-full bg-gradient-warm text-primary-foreground shadow-glow" :disabled="isSubmitting">
-        {{ isSubmitting ? "Envoi en cours…" : "Envoyer le lien" }}
+      <Button
+        type="submit"
+        class="w-full bg-gradient-warm text-primary-foreground shadow-glow"
+        :disabled="submitting"
+      >
+        {{ submitting ? "Envoi…" : "Envoyer le lien" }}
       </Button>
     </form>
+
     <template #footer>
       <RouterLink to="/auth/login" class="font-semibold text-primary hover:underline">Retour à la connexion</RouterLink>
     </template>

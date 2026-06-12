@@ -4,11 +4,14 @@ import { useRoute, useRouter, RouterLink } from "vue-router";
 import AuthLayout from "@/components/auth/AuthLayout.vue";
 import Button from "@/components/ui/Button.vue";
 import { useAuthStore } from "@/stores/auth";
+import { saveDeviceToken } from "@/lib/auth";
 import { api, type ApiError } from "@/lib/api";
 
 const route  = useRoute();
 const router = useRouter();
 const auth   = useAuthStore();
+
+const rememberDevice = ref(false);
 
 const email = ref((route.query.email as string) ?? "");
 
@@ -88,7 +91,8 @@ async function submit() {
   submitting.value = true;
   error.value = null;
   try {
-    const response = await api.verify2fa(email.value, otpCode.value);
+    const response = await api.verify2fa(email.value, otpCode.value, rememberDevice.value);
+    if (response.deviceToken) saveDeviceToken(response.deviceToken);
     auth.setSession(response.accessToken, response.refreshToken);
     router.replace(auth.homeRoute);
   } catch (e) {
@@ -157,6 +161,12 @@ onUnmounted(() => {
       <p v-if="error" class="rounded-md bg-red-50 px-3 py-2 text-center text-sm text-red-700">
         {{ error }}
       </p>
+
+      <!-- Se souvenir de cet appareil (#4) -->
+      <label class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <input type="checkbox" v-model="rememberDevice" class="h-4 w-4 rounded border-border" />
+        Se souvenir de cet appareil (30 jours)
+      </label>
 
       <!-- Bouton vérifier -->
       <Button
