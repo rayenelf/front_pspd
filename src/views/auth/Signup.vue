@@ -6,7 +6,7 @@ import Button from "@/components/ui/Button.vue";
 import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
 import { cn } from "@/lib/utils";
-import { registerAccount, googleSignupUrl, type ClientType, type SignupRole } from "@/lib/auth";
+import { registerAccount, googleSignupUrl, facebookSignupUrl, type ClientType, type SignupRole } from "@/lib/auth";
 
 const router = useRouter();
 
@@ -35,6 +35,10 @@ const successMessage = ref("");
 // OAuth2 Google (F3 — Majd) : convertit le rôle CLIENT/PRESTATAIRE → client/pro.
 function signupWithGoogle() {
   window.location.href = googleSignupUrl(role.value === "PRESTATAIRE" ? "pro" : "client");
+}
+
+function signupWithFacebook() {
+  window.location.href = facebookSignupUrl(role.value === "PRESTATAIRE" ? "pro" : "client");
 }
 
 async function submitSignup() {
@@ -149,6 +153,12 @@ async function submitSignup() {
           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
         </svg>
       {{ role === "CLIENT" ? "S'inscrire en tant que client avec Google" : "S'inscrire en tant que prestataire avec Google" }}      </Button>
+      <Button variant="outline" type="button" class="w-full gap-2" @click="signupWithFacebook">
+        <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.01 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.69.24 2.69.24v2.97h-1.52c-1.49 0-1.95.93-1.95 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.08 24 18.09 24 12.07z" fill="#1877F2"/>
+        </svg>
+        Continuer avec Facebook
+      </Button>
     </form>
     <template #footer>
       Déjà inscrit ? <RouterLink to="/auth/login" class="font-semibold text-primary hover:underline">Se connecter</RouterLink>

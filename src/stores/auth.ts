@@ -46,8 +46,14 @@ export const useAuthStore = defineStore("auth", () => {
     user.value = tokenIsValid() ? getCurrentUser() : null;
   }
 
-  /** Déconnexion : purge tokens + état réactif. */
-  function logout() {
+  /** Déconnexion : révoque côté serveur (best-effort) puis purge tokens + état. */
+  async function logout() {
+    try {
+      const { api } = await import("@/lib/api");
+      await api.logout();
+    } catch {
+      /* best-effort : on purge la session locale quoi qu'il arrive */
+    }
     clearSession();
     user.value = null;
   }

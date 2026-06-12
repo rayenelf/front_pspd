@@ -5,8 +5,10 @@ import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
 import Button from "@/components/ui/Button.vue";
 import Switch from "@/components/ui/Switch.vue";
+import SessionsPanel from "@/components/account/SessionsPanel.vue";
+import DangerZone from "@/components/account/DangerZone.vue";
 import { getCurrentUser, getInitials, getDisplayName } from "@/lib/auth";
-import { api, type ApiError, type UserData } from "@/lib/api";
+import { api, type ApiError } from "@/lib/api";
 
 // ── Données utilisateur depuis le JWT ──────────────────────────────────────
 const user = getCurrentUser();
@@ -183,6 +185,12 @@ async function toggle2fa(active: boolean) {
           ]">{{ twoFaMessage.text }}</p>
         </div>
       </PanelCard>
+
+      <!-- Appareils connectés (#3) -->
+      <SessionsPanel />
+
+      <!-- Suppression de compte (#6) -->
+      <DangerZone />
     </div>
 
     <!-- Préférences -->

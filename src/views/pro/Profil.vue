@@ -7,6 +7,8 @@ import Textarea from "@/components/ui/Textarea.vue";
 import Button from "@/components/ui/Button.vue";
 import Badge from "@/components/ui/Badge.vue";
 import Switch from "@/components/ui/Switch.vue";
+import SessionsPanel from "@/components/account/SessionsPanel.vue";
+import DangerZone from "@/components/account/DangerZone.vue";
 import { getCurrentUser, getInitials, getDisplayName } from "@/lib/auth";
 import { api, type ApiError, type DocumentData, type TypeDocument } from "@/lib/api";
 
@@ -281,6 +283,12 @@ async function toggle2fa(active: boolean) {
           </Button>
         </div>
       </PanelCard>
+
+      <!-- Appareils connectés (#3) -->
+      <SessionsPanel />
+
+      <!-- Suppression de compte (#6) -->
+      <DangerZone />
     </div>
 
     <!-- Statut compte -->

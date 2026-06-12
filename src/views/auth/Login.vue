@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
-import { loginAccount, googleLoginUrl } from "@/lib/auth";
+import { loginAccount, googleLoginUrl, facebookLoginUrl } from "@/lib/auth";
 import { useAuthStore } from "@/stores/auth";
+import { api } from "@/lib/api";
 import AuthLayout from "@/components/auth/AuthLayout.vue";
 import Button from "@/components/ui/Button.vue";
 import Input from "@/components/ui/Input.vue";
@@ -14,6 +15,12 @@ const email = ref("");
 const password = ref("");
 const isSubmitting = ref(false);
 const errorMessage = ref("");
+
+// Email non vérifié → on propose de renvoyer le lien.
+const needsVerification = ref(false);
+const resending = ref(false);
+const resentOk = ref(false);
+
 const router = useRouter();
 const auth = useAuthStore();
 
@@ -22,8 +29,27 @@ function loginWithGoogle() {
   window.location.href = googleLoginUrl();
 }
 
+function loginWithFacebook() {
+  window.location.href = facebookLoginUrl();
+}
+
+async function resendVerification() {
+  resending.value = true;
+  try {
+    await api.resendVerification(email.value.trim());
+    resentOk.value = true;
+  } catch {
+    /* réponse 204 quoi qu'il arrive côté backend */
+    resentOk.value = true;
+  } finally {
+    resending.value = false;
+  }
+}
+
 async function submitLogin() {
   errorMessage.value = "";
+  needsVerification.value = false;
+  resentOk.value = false;
   if (!email.value || !password.value) {
     errorMessage.value = "Email et mot de passe requis.";
     return;
@@ -46,7 +72,13 @@ async function submitLogin() {
       errorMessage.value = "Réponse de connexion invalide (tokens manquants).";
     }
   } catch (e) {
-    errorMessage.value = e instanceof Error ? e.message : "Erreur de connexion.";
+    const msg = e instanceof Error ? e.message : "Erreur de connexion.";
+    if (msg === "EMAIL_NOT_VERIFIED") {
+      needsVerification.value = true;
+      errorMessage.value = "Votre email n'est pas encore vérifié.";
+    } else {
+      errorMessage.value = msg;
+    }
   } finally {
     isSubmitting.value = false;
   }
@@ -77,6 +109,18 @@ async function submitLogin() {
         {{ isSubmitting ? "Connexion…" : "Se connecter" }}
       </Button>
       <p v-if="errorMessage" class="text-sm text-destructive">{{ errorMessage }}</p>
+
+      <!-- Email non vérifié → renvoi du lien -->
+      <div v-if="needsVerification" class="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
+        <p v-if="!resentOk">
+          Vérifiez votre boîte mail, ou
+          <button type="button" class="font-semibold underline" :disabled="resending" @click="resendVerification">
+            {{ resending ? "envoi…" : "renvoyer le lien" }}
+          </button>.
+        </p>
+        <p v-else>📧 Lien de vérification renvoyé — consultez votre boîte mail.</p>
+      </div>
+
       <div class="relative py-2 text-center text-xs uppercase text-muted-foreground">
         <span class="absolute inset-0 top-1/2 -z-10 h-px bg-border" />
         <span class="bg-background px-3">ou continuer avec</span>
@@ -91,11 +135,11 @@ async function submitLogin() {
           </svg>
           Google
         </Button>
-        <Button variant="outline" type="button" class="gap-2">
+        <Button variant="outline" type="button" @click="loginWithFacebook" class="gap-2">
           <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" xmlns="http://www.w3.org/2000/svg">
-            <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" fill="currentColor"/>
+            <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.01 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.69.24 2.69.24v2.97h-1.52c-1.49 0-1.95.93-1.95 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.08 24 18.09 24 12.07z" fill="#1877F2"/>
           </svg>
-          Apple
+          Facebook
         </Button>
       </div>
     </form>
