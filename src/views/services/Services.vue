@@ -4,7 +4,7 @@ import SiteShell from "@/components/site/SiteShell.vue";
 import Input from "@/components/ui/Input.vue";
 import Button from "@/components/ui/Button.vue";
 import Badge from "@/components/ui/Badge.vue";
-import { ChevronLeft, Search, Star, BadgeCheck, Boxes } from "lucide-vue-next";
+import { ChevronLeft, Search, Star, BadgeCheck, Boxes, MapPin, Clock } from "lucide-vue-next";
 import { findService } from "@/lib/services-data";
 import {
   api,
@@ -31,7 +31,49 @@ const searching     = ref(false);
 // Filtres de recherche (B2/B3)
 const filtreCertifie = ref(false);
 const filtreNoteMin  = ref<string>("");
-const tri            = ref<"mieuxNote" | "moinsCher">("mieuxNote");
+const filtrePrixMax  = ref<string>("");
+const filtreLangue   = ref<string>("");
+const tri            = ref<"mieuxNote" | "moinsCher" | "proche" | "plusRapide">("mieuxNote");
+
+// Géolocalisation (B4)
+const userLat   = ref<number | null>(null);
+const userLng   = ref<number | null>(null);
+const rayon     = ref<number>(20);
+const geoLoading = ref(false);
+const geoError   = ref<string | null>(null);
+
+function localiser() {
+  geoError.value = null;
+  if (!navigator.geolocation) {
+    geoError.value = "La géolocalisation n'est pas disponible sur ce navigateur.";
+    return;
+  }
+  geoLoading.value = true;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      userLat.value = pos.coords.latitude;
+      userLng.value = pos.coords.longitude;
+      geoLoading.value = false;
+      runSearch();
+    },
+    () => {
+      // Refus / échec → on retombe sur le centre de Tunis pour la démo.
+      userLat.value = 36.8065;
+      userLng.value = 10.1815;
+      geoLoading.value = false;
+      geoError.value = "Position non autorisée — centre de Tunis utilisé.";
+      runSearch();
+    },
+    { timeout: 8000 }
+  );
+}
+
+function resetGeo() {
+  userLat.value = null;
+  userLng.value = null;
+  if (tri.value === "proche" || tri.value === "plusRapide") tri.value = "mieuxNote";
+  runSearch();
+}
 
 /** Icône + dégradé : repris des mocks par slug, fallback générique. */
 function visual(slug: string) {
@@ -73,11 +115,17 @@ async function runSearch() {
   searching.value = true;
   error.value = null;
   try {
+    const geo = userLat.value != null && userLng.value != null;
     const page = await api.search({
       service:  activeService.value.id,
       certifie: filtreCertifie.value || undefined,
       noteMin:  filtreNoteMin.value ? Number(filtreNoteMin.value) : undefined,
+      prixMax:  filtrePrixMax.value ? Number(filtrePrixMax.value) : undefined,
+      langue:   filtreLangue.value || undefined,
       tri:      tri.value,
+      lat:      geo ? userLat.value! : undefined,
+      lng:      geo ? userLng.value! : undefined,
+      rayon:    geo ? rayon.value : undefined,
       size:     50,
     });
     results.value = page.content;
@@ -177,26 +225,61 @@ onMounted(loadCategories);
         </button>
         <h2 class="font-display text-2xl font-bold">{{ activeService?.libelle }}</h2>
 
-        <!-- Filtres + tri (B2/B3) -->
-        <div class="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-4">
-          <label class="flex items-center gap-2 text-sm">
-            <input type="checkbox" v-model="filtreCertifie" @change="runSearch" class="h-4 w-4 rounded border-input" />
-            Certifié uniquement
-          </label>
-          <label class="flex items-center gap-2 text-sm">
-            Note min
-            <Input v-model="filtreNoteMin" type="number" min="0" max="5" step="0.5" class="h-9 w-20" @change="runSearch" />
-          </label>
-          <label class="flex items-center gap-2 text-sm">
-            Tri
-            <select v-model="tri" @change="runSearch" class="h-9 rounded-md border border-input bg-background px-2 text-sm">
-              <option value="mieuxNote">Mieux notés</option>
-              <option value="moinsCher">Moins chers</option>
-            </select>
-          </label>
-          <span class="ml-auto inline-flex items-center gap-1 text-sm text-muted-foreground">
-            <Search class="h-4 w-4" /> {{ results.length }} résultat(s)
-          </span>
+        <!-- Filtres + tri (B2/B3/B4) -->
+        <div class="mt-5 space-y-3 rounded-xl border border-border bg-card p-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <label class="flex items-center gap-2 text-sm">
+              <input type="checkbox" v-model="filtreCertifie" @change="runSearch" class="h-4 w-4 rounded border-input" />
+              Certifié uniquement
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+              Note min
+              <Input v-model="filtreNoteMin" type="number" min="0" max="5" step="0.5" class="h-9 w-20" @change="runSearch" />
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+              Prix max
+              <Input v-model="filtrePrixMax" type="number" min="0" step="10" placeholder="TND" class="h-9 w-24" @change="runSearch" />
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+              Langue
+              <Input v-model="filtreLangue" placeholder="Français…" class="h-9 w-28" @change="runSearch" />
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+              Tri
+              <select v-model="tri" @change="runSearch" class="h-9 rounded-md border border-input bg-background px-2 text-sm">
+                <option value="mieuxNote">Mieux notés</option>
+                <option value="moinsCher">Moins chers</option>
+                <option value="proche" :disabled="userLat === null">Plus proches</option>
+                <option value="plusRapide" :disabled="userLat === null">Plus rapides</option>
+              </select>
+            </label>
+            <span class="ml-auto inline-flex items-center gap-1 text-sm text-muted-foreground">
+              <Search class="h-4 w-4" /> {{ results.length }} résultat(s)
+            </span>
+          </div>
+
+          <!-- Géolocalisation (B4) -->
+          <div class="flex flex-wrap items-center gap-3 border-t border-border pt-3 text-sm">
+            <Button v-if="userLat === null" variant="outline" size="sm" :disabled="geoLoading" @click="localiser">
+              <MapPin class="mr-1 h-4 w-4" /> {{ geoLoading ? "Localisation…" : "Près de moi" }}
+            </Button>
+            <template v-else>
+              <span class="inline-flex items-center gap-1 text-primary">
+                <MapPin class="h-4 w-4" /> Autour de ma position
+              </span>
+              <label class="flex items-center gap-2">
+                Rayon
+                <select v-model.number="rayon" @change="runSearch" class="h-9 rounded-md border border-input bg-background px-2">
+                  <option :value="5">5 km</option>
+                  <option :value="10">10 km</option>
+                  <option :value="20">20 km</option>
+                  <option :value="50">50 km</option>
+                </select>
+              </label>
+              <button class="text-muted-foreground underline" @click="resetGeo">Désactiver</button>
+            </template>
+            <span v-if="geoError" class="text-xs text-amber-600">{{ geoError }}</span>
+          </div>
         </div>
 
         <p v-if="searching" class="mt-6 text-muted-foreground">Recherche en cours…</p>
@@ -211,6 +294,10 @@ onMounted(loadCategories);
               <Star class="h-4 w-4 fill-primary text-primary" /> {{ Number(r.note).toFixed(1) }}
             </div>
             <p v-if="r.langues" class="mt-2 text-xs text-muted-foreground">{{ r.langues }}</p>
+            <div v-if="r.distanceKm != null" class="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+              <span class="inline-flex items-center gap-1"><MapPin class="h-3.5 w-3.5" /> {{ r.distanceKm }} km</span>
+              <span v-if="r.etaMin != null" class="inline-flex items-center gap-1"><Clock class="h-3.5 w-3.5" /> ~{{ r.etaMin }} min</span>
+            </div>
             <p v-if="r.prixIndicatif" class="mt-3 text-sm">dès <b>{{ r.prixIndicatif }} TND</b></p>
           </div>
         </div>

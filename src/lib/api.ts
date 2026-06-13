@@ -181,9 +181,13 @@ export interface SearchParams {
   noteMin?: number;
   certifie?: boolean;
   langue?: string;
-  tri?: "mieuxNote" | "moinsCher";
+  tri?: "mieuxNote" | "moinsCher" | "proche" | "plusRapide";
   page?: number;
   size?: number;
+  // B4 — géolocalisation
+  lat?: number;
+  lng?: number;
+  rayon?: number;
 }
 
 // ── Admin — validation prestataires (B9) ────────────────────────────────────
