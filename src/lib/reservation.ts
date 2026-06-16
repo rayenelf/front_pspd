@@ -26,6 +26,7 @@ export interface Reservation {
   statut: StatutReservation;
   dateService: string; // ISO date  "YYYY-MM-DD"
   heureService: string; // ISO time "HH:mm:ss"
+  description: string | null;
   prixConvenu: number | null;
   creeLe: string; // ISO datetime
 }
