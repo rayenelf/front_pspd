@@ -335,6 +335,17 @@ export const api = {
       body: JSON.stringify({ libelle, slug, parentId }),
     }),
 
+  /** Met à jour une catégorie : renommage, slug, déplacement (parentId vide = racine) — ADMIN (B5). */
+  updateCategory: (
+    id: string,
+    data: { libelle?: string; slug?: string; parentId?: string | null },
+  ): Promise<CategorieData> =>
+    apiFetch(`/api/categories/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+
+  /** Désactive (suppression logique) une catégorie — ADMIN (B5). */
+  deleteCategory: (id: string): Promise<void> =>
+    apiFetch(`/api/categories/${id}`, { method: "DELETE" }),
+
   /** Crée un service dans une catégorie — ADMIN (B5). */
   createService: (data: {
     categorieId: string;

@@ -14,16 +14,16 @@ const services    = ref<ServiceData[]>([]);
 const loading     = ref(false);
 const feedback    = ref<{ type: "success" | "error"; text: string } | null>(null);
 
-/** Aplatit l'arbre en liste avec niveau d'indentation (pour le <select> parent). */
+/** Aplatit l'arbre en liste avec niveau d'indentation et parent (pour les <select>). */
 const flatCategories = computed(() => {
-  const out: { id: string; libelle: string; depth: number }[] = [];
-  const walk = (nodes: CategorieData[], depth: number) => {
+  const out: { id: string; libelle: string; slug: string; depth: number; parentId: string | null }[] = [];
+  const walk = (nodes: CategorieData[], depth: number, parentId: string | null) => {
     for (const n of nodes) {
-      out.push({ id: n.id, libelle: n.libelle, depth });
-      if (n.enfants?.length) walk(n.enfants, depth + 1);
+      out.push({ id: n.id, libelle: n.libelle, slug: n.slug, depth, parentId });
+      if (n.enfants?.length) walk(n.enfants, depth + 1, n.id);
     }
   };
-  walk(categories.value, 0);
+  walk(categories.value, 0, null);
   return out;
 });
 
@@ -60,9 +60,29 @@ async function selectCategory(id: string) {
 
 onMounted(loadCategories);
 
-// ── Création catégorie ───────────────────────────────────────────────────────
+// ── Création / édition catégorie ───────────────────────────────────────────────
 const catForm = reactive({ libelle: "", slug: "", parentId: "" });
 const catSaving = ref(false);
+const editingCatId = ref<string | null>(null);
+const isEditingCat = computed(() => editingCatId.value !== null);
+
+/** Ids à exclure du choix de parent en édition : la catégorie et tous ses descendants (anti-cycle). */
+const excludedParentIds = computed(() => {
+  const ids = new Set<string>();
+  if (!editingCatId.value) return ids;
+  ids.add(editingCatId.value);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const c of flatCategories.value) {
+      if (c.parentId && ids.has(c.parentId) && !ids.has(c.id)) { ids.add(c.id); changed = true; }
+    }
+  }
+  return ids;
+});
+const parentOptions = computed(() =>
+  flatCategories.value.filter((c) => !excludedParentIds.value.has(c.id)),
+);
 
 /** Génère un slug à partir du libellé (minuscules, sans accents, tirets). */
 function autoSlug() {
@@ -74,21 +94,58 @@ function autoSlug() {
     .replace(/^-|-$/g, "");
 }
 
-async function createCategory() {
+function resetCatForm() {
+  editingCatId.value = null;
+  catForm.libelle = ""; catForm.slug = ""; catForm.parentId = "";
+}
+
+/** Charge la catégorie sélectionnée dans le formulaire en mode édition. */
+function startEditCategory(id: string) {
+  const c = flatCategories.value.find((x) => x.id === id);
+  if (!c) return;
+  editingCatId.value = id;
+  catForm.libelle = c.libelle;
+  catForm.slug = c.slug;
+  catForm.parentId = c.parentId ?? "";
+}
+
+async function saveCategory() {
   if (!catForm.libelle || !catForm.slug) {
     notify("error", "Libellé et slug requis.");
     return;
   }
   catSaving.value = true;
   try {
-    await api.createCategory(catForm.libelle, catForm.slug, catForm.parentId || undefined);
-    catForm.libelle = ""; catForm.slug = ""; catForm.parentId = "";
+    if (editingCatId.value) {
+      await api.updateCategory(editingCatId.value, {
+        libelle: catForm.libelle,
+        slug: catForm.slug,
+        parentId: catForm.parentId || null,
+      });
+      notify("success", "Catégorie mise à jour.");
+    } else {
+      await api.createCategory(catForm.libelle, catForm.slug, catForm.parentId || undefined);
+      notify("success", "Catégorie créée.");
+    }
+    resetCatForm();
     await loadCategories();
-    notify("success", "Catégorie créée.");
   } catch (e) {
-    notify("error", (e as ApiError).message || "Échec de la création.");
+    notify("error", (e as ApiError).message || "Échec de l'enregistrement.");
   } finally {
     catSaving.value = false;
+  }
+}
+
+async function deactivateCategory(id: string) {
+  if (!confirm("Désactiver cette catégorie ? Elle sera retirée du catalogue.")) return;
+  try {
+    await api.deleteCategory(id);
+    if (selectedId.value === id) { selectedId.value = null; services.value = []; }
+    if (editingCatId.value === id) resetCatForm();
+    await loadCategories();
+    notify("success", "Catégorie désactivée.");
+  } catch (e) {
+    notify("error", (e as ApiError).message || "Échec de la désactivation.");
   }
 }
 
@@ -159,8 +216,20 @@ async function deleteService(id: string) {
           </button>
         </div>
 
-        <!-- Formulaire nouvelle catégorie -->
+        <!-- Actions sur la catégorie sélectionnée -->
+        <div v-if="selectedId" class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+          <span class="text-muted-foreground">
+            Sélection : <span class="font-medium text-foreground">{{ selectedLibelle }}</span>
+          </span>
+          <Button size="sm" variant="outline" @click="startEditCategory(selectedId)">Modifier</Button>
+          <Button size="sm" variant="outline" @click="deactivateCategory(selectedId)">Désactiver</Button>
+        </div>
+
+        <!-- Formulaire création / édition de catégorie -->
         <div class="mt-5 space-y-3 border-t border-border pt-4">
+          <p class="text-sm font-medium">
+            {{ isEditingCat ? "Modifier la catégorie" : "Nouvelle catégorie" }}
+          </p>
           <div class="grid gap-3 sm:grid-cols-2">
             <div class="space-y-2">
               <Label>Libellé</Label>
@@ -177,17 +246,22 @@ async function deleteService(id: string) {
                 class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
               >
                 <option value="">— Racine —</option>
-                <option v-for="c in flatCategories" :key="c.id" :value="c.id">
+                <option v-for="c in parentOptions" :key="c.id" :value="c.id">
                   {{ "—".repeat(c.depth) }} {{ c.libelle }}
                 </option>
               </select>
             </div>
           </div>
-          <Button
-            class="bg-gradient-warm text-primary-foreground"
-            :disabled="catSaving"
-            @click="createCategory"
-          >{{ catSaving ? "Création…" : "+ Ajouter la catégorie" }}</Button>
+          <div class="flex flex-wrap gap-2">
+            <Button
+              class="bg-gradient-warm text-primary-foreground"
+              :disabled="catSaving"
+              @click="saveCategory"
+            >{{ catSaving ? "Enregistrement…" : isEditingCat ? "Enregistrer" : "+ Ajouter la catégorie" }}</Button>
+            <Button v-if="isEditingCat" variant="outline" :disabled="catSaving" @click="resetCatForm">
+              Annuler
+            </Button>
+          </div>
         </div>
       </PanelCard>
 
