@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import PanelCard from "@/components/dashboard/PanelCard.vue";
 import Badge from "@/components/ui/Badge.vue";
 import Button from "@/components/ui/Button.vue";
@@ -10,6 +10,24 @@ const missions = ref<Reservation[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const busyId = ref<string | null>(null);
+
+// Onglets de filtre par statut. `null` = toutes les missions.
+const onglets: { label: string; statut: StatutReservation | null }[] = [
+  { label: "Toutes", statut: null },
+  { label: "En attente", statut: "EN_ATTENTE" },
+  { label: "Acceptées", statut: "ACCEPTEE" },
+  { label: "En cours", statut: "EN_COURS" },
+  { label: "Terminées", statut: "TERMINEE" },
+];
+const filtre = ref<StatutReservation | null>(null);
+
+const filtrees = computed(() =>
+  filtre.value === null ? missions.value : missions.value.filter((m) => m.statut === filtre.value),
+);
+
+function compte(statut: StatutReservation | null): number {
+  return statut === null ? missions.value.length : missions.value.filter((m) => m.statut === statut).length;
+}
 
 function badgeVariant(s: StatutReservation): "default" | "secondary" | "destructive" {
   if (s === "ANNULEE" || s === "REFUSEE" || s === "EN_LITIGE") return "destructive";
@@ -52,10 +70,30 @@ onMounted(charger);
       {{ error }}
     </p>
 
+    <!-- Onglets de filtre par statut -->
+    <div v-if="!loading && missions.length > 0" class="mb-4 flex flex-wrap gap-2">
+      <button
+        v-for="o in onglets"
+        :key="o.label"
+        type="button"
+        class="rounded-full border px-3 py-1 text-xs font-medium transition-colors"
+        :class="filtre === o.statut
+          ? 'border-primary bg-primary text-primary-foreground'
+          : 'border-border text-muted-foreground hover:bg-muted'"
+        @click="filtre = o.statut"
+      >
+        {{ o.label }} ({{ compte(o.statut) }})
+      </button>
+    </div>
+
     <p v-if="loading" class="py-6 text-center text-sm text-muted-foreground">Chargement…</p>
 
     <p v-else-if="missions.length === 0" class="py-6 text-center text-sm text-muted-foreground">
       Aucune mission pour le moment.
+    </p>
+
+    <p v-else-if="filtrees.length === 0" class="py-6 text-center text-sm text-muted-foreground">
+      Aucune mission dans cette catégorie.
     </p>
 
     <div v-else class="overflow-x-auto">
@@ -71,7 +109,7 @@ onMounted(charger);
           </tr>
         </thead>
         <tbody>
-          <tr v-for="m in missions" :key="m.id" class="border-t border-border">
+          <tr v-for="m in filtrees" :key="m.id" class="border-t border-border">
             <td class="py-3 font-mono text-xs">{{ m.id.slice(0, 8) }}</td>
             <td>{{ m.dateService }}</td>
             <td class="text-muted-foreground">{{ m.heureService?.slice(0, 5) }}</td>
