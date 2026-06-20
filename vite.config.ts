@@ -6,6 +6,8 @@ import path from "node:path";
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
   server: {
+    port: 5173,
+    strictPort: true,
     proxy: {
       "/api": {
         target: "http://localhost:8081",

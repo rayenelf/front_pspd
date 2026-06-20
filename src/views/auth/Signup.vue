@@ -1,32 +1,57 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import AuthLayout from "@/components/auth/AuthLayout.vue";
 import Button from "@/components/ui/Button.vue";
 import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
 import { cn } from "@/lib/utils";
-import { registerAccount, googleSignupUrl, facebookSignupUrl, type ClientType, type SignupRole } from "@/lib/auth";
+import { api, type CategorieData } from "@/lib/api";
+import {
+  registerAccount,
+  googleSignupUrl,
+  facebookSignupUrl,
+  type ClientType,
+  type PrestataireType,
+  type SignupRole,
+} from "@/lib/auth";
 
 const router = useRouter();
 
 const role = ref<SignupRole>("CLIENT");
 const form = reactive({
   type: "PARTICULIER" as ClientType,
+  typePrestataire: "INDIVIDUEL" as PrestataireType,
   prenom: "",
   nom: "",
   email: "",
   telephone: "",
+  adresse: "",
   motDePasse: "",
   confirmation: "",
   raisonSociale: "",
   matriculeFiscal: "",
   nomCommercial: "",
   categoriePrincipale: "",
+  zoneIntervention: "",
+});
+
+const cguAcceptees = ref(false);
+
+// Catalogue des catégories (cahier des charges §4 : la catégorie d'activité
+// du prestataire doit pointer vers le catalogue, pas un texte libre).
+const categories = ref<CategorieData[]>([]);
+onMounted(async () => {
+  try {
+    categories.value = await api.getCategories();
+  } catch {
+    /* catalogue indisponible : on garde la liste vide, l'utilisateur réessaiera */
+  }
 });
 
 const isPrestataire = computed(() => role.value === "PRESTATAIRE");
 const isEntreprise = computed(() => form.type === "ENTREPRISE");
+const isSociete = computed(() => form.typePrestataire === "SOCIETE");
 
 const isSubmitting = ref(false);
 const errorMessage = ref("");
@@ -45,6 +70,11 @@ async function submitSignup() {
   errorMessage.value = "";
   successMessage.value = "";
 
+  if (!form.adresse.trim()) {
+    errorMessage.value = "L'adresse est requise.";
+    return;
+  }
+
   if (form.motDePasse.length < 8) {
     errorMessage.value = "Le mot de passe doit contenir au moins 8 caractères.";
     return;
@@ -55,21 +85,45 @@ async function submitSignup() {
     return;
   }
 
+  if (isPrestataire.value) {
+    if (!form.nomCommercial.trim()) {
+      errorMessage.value = "Le nom commercial est requis.";
+      return;
+    }
+    if (!form.categoriePrincipale) {
+      errorMessage.value = "La catégorie d'activité est requise.";
+      return;
+    }
+    if (!form.zoneIntervention.trim()) {
+      errorMessage.value = "La zone d'intervention est requise.";
+      return;
+    }
+  }
+
+  if (!cguAcceptees.value) {
+    errorMessage.value = "Vous devez accepter les CGU et la politique de confidentialité.";
+    return;
+  }
+
   isSubmitting.value = true;
 
   try {
     await registerAccount({
       role: role.value,
       type: form.type,
+      typePrestataire: isPrestataire.value ? form.typePrestataire : undefined,
       nom: form.nom.trim(),
       prenom: form.prenom.trim(),
       email: form.email.trim(),
       telephone: form.telephone.trim(),
+      adresse: form.adresse.trim(),
       motDePasse: form.motDePasse,
-      raisonSociale: isEntreprise.value ? form.raisonSociale.trim() : undefined,
-      matriculeFiscal: isEntreprise.value ? form.matriculeFiscal.trim() : undefined,
+      cguAcceptees: cguAcceptees.value,
+      raisonSociale: isEntreprise.value || isSociete.value ? form.raisonSociale.trim() : undefined,
+      matriculeFiscal: isEntreprise.value || isSociete.value ? form.matriculeFiscal.trim() : undefined,
       nomCommercial: isPrestataire.value ? form.nomCommercial.trim() : undefined,
-      categoriePrincipale: isPrestataire.value ? form.categoriePrincipale.trim() || undefined : undefined,
+      categoriePrincipale: isPrestataire.value ? form.categoriePrincipale || undefined : undefined,
+      zoneIntervention: isPrestataire.value ? form.zoneIntervention.trim() : undefined,
     });
 
     successMessage.value = "Compte créé. Vérifie tes messages pour poursuivre la validation.";
@@ -110,7 +164,10 @@ async function submitSignup() {
       </div>
       <div class="space-y-2"><Label for="em">Email</Label><Input id="em" v-model="form.email" type="email" autocomplete="email" placeholder="vous@exemple.ma" /></div>
       <div class="space-y-2"><Label for="ph">Téléphone</Label><Input id="ph" v-model="form.telephone" autocomplete="tel" placeholder="+212 6 12 34 56 78" /></div>
-      <div class="space-y-2">
+      <div class="space-y-2"><Label for="ad">Adresse</Label><Input id="ad" v-model="form.adresse" autocomplete="street-address" placeholder="12 rue de la Liberté, Tunis" /></div>
+
+      <!-- ── CLIENT : particulier / entreprise ────────────────────────── -->
+      <div v-if="!isPrestataire" class="space-y-2">
         <Label for="type">Type de compte</Label>
         <select
           id="type"
@@ -121,23 +178,64 @@ async function submitSignup() {
           <option value="ENTREPRISE">Entreprise</option>
         </select>
       </div>
-      <div v-if="isEntreprise" class="grid gap-3 sm:grid-cols-2">
+      <div v-if="!isPrestataire && isEntreprise" class="grid gap-3 sm:grid-cols-2">
         <div class="space-y-2"><Label for="rs">Raison sociale</Label><Input id="rs" v-model="form.raisonSociale" placeholder="Société Atlas" /></div>
         <div class="space-y-2"><Label for="mf">Matricule fiscal</Label><Input id="mf" v-model="form.matriculeFiscal" placeholder="1234567P" /></div>
+      </div>
+
+      <!-- ── PRESTATAIRE : individuel / société + activité ─────────────── -->
+      <div v-if="isPrestataire" class="space-y-2">
+        <Label for="typep">Type de prestataire</Label>
+        <select
+          id="typep"
+          v-model="form.typePrestataire"
+          class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+        >
+          <option value="INDIVIDUEL">Individuel (artisan, technicien, freelance)</option>
+          <option value="SOCIETE">Société prestataire (plusieurs employés)</option>
+        </select>
+      </div>
+      <div v-if="isPrestataire && isSociete" class="grid gap-3 sm:grid-cols-2">
+        <div class="space-y-2"><Label for="rsp">Raison sociale</Label><Input id="rsp" v-model="form.raisonSociale" placeholder="Atlas Services SARL" /></div>
+        <div class="space-y-2"><Label for="mfp">Matricule fiscal</Label><Input id="mfp" v-model="form.matriculeFiscal" placeholder="1234567P" /></div>
       </div>
       <div v-if="isPrestataire" class="space-y-2">
         <Label for="mc">Nom commercial</Label>
         <Input id="mc" v-model="form.nomCommercial" placeholder="ElecPro" />
       </div>
       <div v-if="isPrestataire" class="space-y-2">
-        <Label for="cp">Catégorie principale</Label>
-        <Input id="cp" v-model="form.categoriePrincipale" placeholder="Électricité, plomberie, nettoyage…" />
+        <Label for="cp">Catégorie d'activité</Label>
+        <select
+          id="cp"
+          v-model="form.categoriePrincipale"
+          class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+        >
+          <option value="" disabled>Sélectionnez une catégorie…</option>
+          <option v-for="c in categories" :key="c.id" :value="c.libelle">{{ c.libelle }}</option>
+        </select>
+      </div>
+      <div v-if="isPrestataire" class="space-y-2">
+        <Label for="zi">Zone d'intervention</Label>
+        <Input id="zi" v-model="form.zoneIntervention" placeholder="Tunis, Ariana, La Marsa…" />
       </div>
       <div class="space-y-2"><Label for="pw">Mot de passe</Label><Input id="pw" v-model="form.motDePasse" type="password" autocomplete="new-password" placeholder="Minimum 8 caractères" /></div>
       <div class="space-y-2"><Label for="cpw">Confirmer le mot de passe</Label><Input id="cpw" v-model="form.confirmation" type="password" autocomplete="new-password" placeholder="Retapez le mot de passe" /></div>
       <p v-if="errorMessage" class="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">{{ errorMessage }}</p>
       <p v-else-if="successMessage" class="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">{{ successMessage }}</p>
-      <p class="text-xs text-muted-foreground">En continuant, vous acceptez les CGU et notre politique de confidentialité.</p>
+      <label class="flex items-start gap-2 text-xs text-muted-foreground">
+        <input
+          type="checkbox"
+          v-model="cguAcceptees"
+          class="mt-0.5 h-4 w-4 shrink-0 rounded border-input accent-primary"
+        />
+        <span>
+          J'accepte les
+          <RouterLink to="/cgu" class="font-medium text-primary hover:underline">conditions générales d'utilisation</RouterLink>
+          et la
+          <RouterLink to="/confidentialite" class="font-medium text-primary hover:underline">politique de confidentialité</RouterLink>
+          (RGPD).
+        </span>
+      </label>
       <Button type="submit" class="w-full bg-gradient-warm text-primary-foreground shadow-glow" :disabled="isSubmitting">
         {{ isSubmitting ? "Création en cours…" : role === "CLIENT" ? "Créer mon compte" : "Devenir prestataire" }}
       </Button>

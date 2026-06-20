@@ -76,6 +76,9 @@ async function submitLogin() {
     if (msg === "EMAIL_NOT_VERIFIED") {
       needsVerification.value = true;
       errorMessage.value = "Votre email n'est pas encore vérifié.";
+    } else if (msg === "ACCOUNT_SUSPENDED") {
+      errorMessage.value =
+        "Votre compte est suspendu. Contactez le support pour plus d'informations.";
     } else {
       errorMessage.value = msg;
     }

@@ -21,7 +21,6 @@ const pathname = computed(() => route.path);
 const auth = useAuthStore();
 const { displayName, initials, email } = storeToRefs(auth);
 
-
 function isActive(to: string) {
   const lower = "/" + props.role.toLowerCase();
   return pathname.value === to || (to !== lower && pathname.value.startsWith(to));
@@ -62,7 +61,6 @@ async function logout() {
       </nav>
       <div class="border-t border-border p-3">
         <Button variant="ghost" size="sm" class="w-full justify-start gap-2" @click="logout">
-
           <LogOut class="h-4 w-4" /> Déconnexion
         </Button>
       </div>

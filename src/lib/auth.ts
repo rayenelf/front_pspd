@@ -45,9 +45,35 @@ export function getDeviceToken(): string | null {
   return localStorage.getItem(DEVICE_KEY);
 }
 
+/**
+ * Événement émis à chaque écriture/purge des tokens DANS CET ONGLET.
+ * (L'événement natif `storage` ne couvre que les autres onglets.)
+ * Le store Pinia l'écoute pour rester synchronisé avec le localStorage.
+ */
+export const SESSION_CHANGED_EVENT = "pspd:session-changed";
+
+function notifySessionChanged(): void {
+  window.dispatchEvent(new Event(SESSION_CHANGED_EVENT));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SESSION MONO-COMPTE (remplacement propre)
+// ────────────────────────────────────────────────────────────────────────────
+// Une seule session active à la fois dans le navigateur. Quand un autre compte
+// se connecte (ex. le fils client après le père prestataire), la session
+// précédente est ENTIÈREMENT remplacée — aucun token résiduel qui causerait des
+// 403 / déconnexions parasites. La cohérence entre onglets est assurée par le
+// routeur (réévaluation sur changement de token / retour d'onglet).
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Enregistre la session courante. ÉCRASE proprement toute session précédente :
+ * un nouveau login (form, 2FA, OAuth) remplace donc totalement l'ancien compte.
+ */
 export function saveSession(accessToken: string, refreshToken: string): void {
   localStorage.setItem(TOKEN_KEY, accessToken);
   localStorage.setItem(REFRESH_KEY, refreshToken);
+  notifySessionChanged();
 }
 
 export function getAccessToken(): string | null {
@@ -58,9 +84,11 @@ export function getRefreshToken(): string | null {
   return localStorage.getItem(REFRESH_KEY);
 }
 
+/** Purge la session locale (déconnexion). */
 export function clearSession(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_KEY);
+  notifySessionChanged();
 }
 
 /** Décode le payload d'un JWT (sans vérifier la signature — usage front uniquement). */
@@ -84,7 +112,9 @@ export function getRole(): Role | null {
 
 /**
  * Vrai si un access token valide et non expiré est présent.
- * Vérifie le claim `exp` (secondes epoch) ; un token expiré est purgé.
+ * Ne purge PAS la session si l'access token est expiré : le refresh token
+ * (7 j) permet d'en obtenir un nouveau silencieusement — c'est le rôle du
+ * garde de route et du client HTTP, pas de cette fonction.
  */
 export function isAuthenticated(): boolean {
   const token = getAccessToken();
@@ -92,11 +122,7 @@ export function isAuthenticated(): boolean {
   const claims = decodeJwt(token);
   if (!claims) return false;
   const exp = claims.exp as number | undefined;
-  if (exp && exp * 1000 < Date.now()) {
-    clearSession();
-    return false;
-  }
-  return true;
+  return !exp || exp * 1000 >= Date.now();
 }
 
 /** Route de destination selon le rôle après login. */
@@ -158,18 +184,24 @@ export type SignupRole = "CLIENT" | "PRESTATAIRE";
 
 export type ClientType = "PARTICULIER" | "ENTREPRISE";
 
+export type PrestataireType = "INDIVIDUEL" | "SOCIETE";
+
 export interface SignupPayload {
   role: SignupRole;
   type: ClientType;
+  typePrestataire?: PrestataireType;
   nom: string;
   prenom: string;
   email: string;
   telephone: string;
+  adresse: string;
   motDePasse: string;
+  cguAcceptees: boolean;
   raisonSociale?: string;
   matriculeFiscal?: string;
   nomCommercial?: string;
   categoriePrincipale?: string;
+  zoneIntervention?: string;
 }
 
 export interface SignupResponse {

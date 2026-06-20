@@ -17,6 +17,7 @@ import {
   getInitials,
   homeRouteForRole,
   isAuthenticated as tokenIsValid,
+  SESSION_CHANGED_EVENT,
   type UserInfo,
   type Role,
 } from "@/lib/auth";
@@ -24,6 +25,25 @@ import {
 export const useAuthStore = defineStore("auth", () => {
   // ── État ───────────────────────────────────────────────────────────────────
   const user = ref<UserInfo | null>(getCurrentUser());
+
+  // Le localStorage est la source de vérité des tokens, partagé entre onglets.
+  // Sans resynchronisation, un login avec un autre compte (autre onglet) ou un
+  // refresh automatique (cet onglet) ferait envoyer des tokens ne correspondant
+  // plus à l'utilisateur affiché.
+  const resync = () => {
+    user.value = tokenIsValid() ? getCurrentUser() : null;
+  };
+  // Tokens modifiés depuis un AUTRE onglet (login d'un autre compte, déconnexion…).
+  window.addEventListener("storage", (e) => {
+    if (e.key === null || e.key.includes("token")) resync();
+  });
+  // Tokens modifiés dans CET onglet (refresh auto sur 401, OAuth callback…).
+  window.addEventListener(SESSION_CHANGED_EVENT, resync);
+  // Retour sur l'onglet : l'identité affichée doit refléter le token courant
+  // (un autre compte a pu se connecter entre-temps dans un autre onglet).
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) resync();
+  });
 
   // ── Getters ────────────────────────────────────────────────────────────────
   const isAuthenticated = computed(() => user.value !== null && tokenIsValid());
@@ -43,7 +63,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   /** Recharge l'utilisateur depuis le token courant (ex. au démarrage de l'app). */
   function refreshFromStorage() {
-    user.value = tokenIsValid() ? getCurrentUser() : null;
+    resync();
   }
 
   /** Déconnexion : révoque côté serveur (best-effort) puis purge tokens + état. */

@@ -1,5 +1,13 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
-import { isAuthenticated, getRole, homeRouteForRole, type Role } from "@/lib/auth";
+import {
+  isAuthenticated,
+  getRole,
+  getRefreshToken,
+  clearSession,
+  homeRouteForRole,
+  SESSION_CHANGED_EVENT,
+  type Role,
+} from "@/lib/auth";
 
 // `meta.roles` : si présent, route protégée — seuls ces rôles y accèdent.
 // Absent → route publique.
@@ -14,6 +22,8 @@ const routes: RouteRecordRaw[] = [
   { path: "/services", component: () => import("@/views/services/Services.vue") },
   { path: "/services/:slug", component: () => import("@/views/services/ServiceDetail.vue") },
   { path: "/comment-ca-marche", component: () => import("@/views/CommentCaMarche.vue") },
+  { path: "/cgu", component: () => import("@/views/legal/CGU.vue") },
+  { path: "/confidentialite", component: () => import("@/views/legal/Confidentialite.vue") },
   { path: "/devenir-prestataire", component: () => import("@/views/DevenirPrestataire.vue") },
   { path: "/auth/login", component: () => import("@/views/auth/Login.vue") },
   { path: "/auth/signup", component: () => import("@/views/auth/Signup.vue") },
@@ -72,16 +82,25 @@ export const router = createRouter({
 });
 
 // ── Garde d'authentification + autorisation par rôle (F4 — Majd) ─────────────
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   // Rôles requis = ceux déclarés sur la route la plus profonde qui en a.
   const required = to.matched.find((r) => r.meta.roles)?.meta.roles;
 
   // Route publique → libre.
   if (!required) return true;
 
-  // Protégée mais non authentifié → login (avec retour après connexion).
+  // Access token absent/expiré : tenter un refresh silencieux avant de
+  // renvoyer au login — le refresh token reste valable 7 jours.
   if (!isAuthenticated()) {
-    return { path: "/auth/login", query: { redirect: to.fullPath } };
+    let refreshed = false;
+    if (getRefreshToken()) {
+      const { api } = await import("@/lib/api"); // import dynamique : évite le cycle router ↔ api
+      refreshed = await api.refreshTokens().catch(() => false);
+    }
+    if (!refreshed) {
+      clearSession(); // tokens morts → purge propre avant le login
+      return { path: "/auth/login", query: { redirect: to.fullPath } };
+    }
   }
 
   // Authentifié mais mauvais rôle → renvoyé vers son propre espace.
@@ -91,4 +110,46 @@ router.beforeEach((to) => {
   }
 
   return true;
+});
+
+// ── Re-vérification HORS navigation (cohérence session ↔ page) ────────────────
+// Le garde ci-dessus ne s'exécute qu'à chaque navigation. Or la session dans
+// localStorage peut changer SANS navigation : remplacement par un autre compte
+// (ex. le fils client se connecte alors que le père prestataire était sur /pro,
+// y compris depuis un autre onglet via l'événement `storage`), refresh
+// automatique, ou retour sur l'onglet. Sans ça, une page protégée déjà affichée
+// continuerait d'envoyer le NOUVEAU token avec le mauvais rôle → 403. On
+// re-valide donc la route courante pour rediriger vers l'espace du compte actif.
+function reevaluateCurrentRoute() {
+  const current  = router.currentRoute.value;
+  const required = current.matched.find((r) => r.meta.roles)?.meta.roles;
+  if (!required) return; // route publique : rien à protéger
+
+  // Access token absent/expiré : NE PAS déconnecter si un refresh token existe
+  // encore (il sera utilisé au prochain appel API ou à la prochaine navigation).
+  // On ne redirige vers le login QUE si la session est totalement morte.
+  if (!isAuthenticated()) {
+    if (!getRefreshToken() && current.path !== "/auth/login") {
+      router.replace({ path: "/auth/login", query: { redirect: current.fullPath } });
+    }
+    return;
+  }
+
+  // Le rôle du compte actif ne correspond plus à la page affichée → on renvoie
+  // l'utilisateur vers SON espace réel (cohérence identité ↔ token).
+  const role = getRole();
+  if (!role || !required.includes(role)) {
+    router.replace(homeRouteForRole(role));
+  }
+}
+
+// Token modifié dans un AUTRE onglet (connexion/déconnexion d'un autre compte).
+window.addEventListener("storage", (e) => {
+  if (e.key === null || e.key.includes("token")) reevaluateCurrentRoute();
+});
+// Token modifié dans CET onglet (refresh auto, OAuth callback, 2FA…).
+window.addEventListener(SESSION_CHANGED_EVENT, reevaluateCurrentRoute);
+// Retour sur l'onglet après une bascule (compte changé ailleurs entre-temps).
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) reevaluateCurrentRoute();
 });
