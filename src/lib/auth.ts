@@ -56,6 +56,20 @@ function notifySessionChanged(): void {
   window.dispatchEvent(new Event(SESSION_CHANGED_EVENT));
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// SESSION MONO-COMPTE (remplacement propre)
+// ────────────────────────────────────────────────────────────────────────────
+// Une seule session active à la fois dans le navigateur. Quand un autre compte
+// se connecte (ex. le fils client après le père prestataire), la session
+// précédente est ENTIÈREMENT remplacée — aucun token résiduel qui causerait des
+// 403 / déconnexions parasites. La cohérence entre onglets est assurée par le
+// routeur (réévaluation sur changement de token / retour d'onglet).
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Enregistre la session courante. ÉCRASE proprement toute session précédente :
+ * un nouveau login (form, 2FA, OAuth) remplace donc totalement l'ancien compte.
+ */
 export function saveSession(accessToken: string, refreshToken: string): void {
   localStorage.setItem(TOKEN_KEY, accessToken);
   localStorage.setItem(REFRESH_KEY, refreshToken);
@@ -70,6 +84,7 @@ export function getRefreshToken(): string | null {
   return localStorage.getItem(REFRESH_KEY);
 }
 
+/** Purge la session locale (déconnexion). */
 export function clearSession(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_KEY);

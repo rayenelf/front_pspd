@@ -5,6 +5,7 @@ import {
   getRefreshToken,
   clearSession,
   homeRouteForRole,
+  SESSION_CHANGED_EVENT,
   type Role,
 } from "@/lib/auth";
 
@@ -109,4 +110,46 @@ router.beforeEach(async (to) => {
   }
 
   return true;
+});
+
+// ── Re-vérification HORS navigation (cohérence session ↔ page) ────────────────
+// Le garde ci-dessus ne s'exécute qu'à chaque navigation. Or la session dans
+// localStorage peut changer SANS navigation : remplacement par un autre compte
+// (ex. le fils client se connecte alors que le père prestataire était sur /pro,
+// y compris depuis un autre onglet via l'événement `storage`), refresh
+// automatique, ou retour sur l'onglet. Sans ça, une page protégée déjà affichée
+// continuerait d'envoyer le NOUVEAU token avec le mauvais rôle → 403. On
+// re-valide donc la route courante pour rediriger vers l'espace du compte actif.
+function reevaluateCurrentRoute() {
+  const current  = router.currentRoute.value;
+  const required = current.matched.find((r) => r.meta.roles)?.meta.roles;
+  if (!required) return; // route publique : rien à protéger
+
+  // Access token absent/expiré : NE PAS déconnecter si un refresh token existe
+  // encore (il sera utilisé au prochain appel API ou à la prochaine navigation).
+  // On ne redirige vers le login QUE si la session est totalement morte.
+  if (!isAuthenticated()) {
+    if (!getRefreshToken() && current.path !== "/auth/login") {
+      router.replace({ path: "/auth/login", query: { redirect: current.fullPath } });
+    }
+    return;
+  }
+
+  // Le rôle du compte actif ne correspond plus à la page affichée → on renvoie
+  // l'utilisateur vers SON espace réel (cohérence identité ↔ token).
+  const role = getRole();
+  if (!role || !required.includes(role)) {
+    router.replace(homeRouteForRole(role));
+  }
+}
+
+// Token modifié dans un AUTRE onglet (connexion/déconnexion d'un autre compte).
+window.addEventListener("storage", (e) => {
+  if (e.key === null || e.key.includes("token")) reevaluateCurrentRoute();
+});
+// Token modifié dans CET onglet (refresh auto, OAuth callback, 2FA…).
+window.addEventListener(SESSION_CHANGED_EVENT, reevaluateCurrentRoute);
+// Retour sur l'onglet après une bascule (compte changé ailleurs entre-temps).
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) reevaluateCurrentRoute();
 });

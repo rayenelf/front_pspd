@@ -116,7 +116,11 @@ onMounted(() => {
     router.replace("/auth/login");
     return;
   }
-  sendOtp();
+  // Le code OTP a DÉJÀ été envoyé par l'étape de login (AuthService.login →
+  // generateAndSendOtp). On ne renvoie donc PAS d'OTP ici, sinon l'utilisateur
+  // recevrait deux emails. On démarre simplement le compte à rebours ; le bouton
+  // « Renvoyer un nouveau code » permet un renvoi manuel si besoin.
+  startCountdown();
 });
 
 onUnmounted(() => {

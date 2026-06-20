@@ -107,6 +107,19 @@ export interface UpdatePrestatairePayload {
   langues?: string;
 }
 
+export interface PrestataireProfile {
+  nomCommercial: string;
+  categoriePrincipale: string | null;
+  typePrestataire: string | null;
+  zoneIntervention: string | null;
+  rayonKm: number;
+  langues: string | null;
+  statutValidation: StatutValidation;
+  certifie: boolean;
+  noteMoyenne: number;
+  nombreDocuments: number;
+}
+
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
@@ -247,6 +260,10 @@ export const api = {
   /** Force le rafraîchissement des tokens (ex. après mise à jour du profil → JWT à jour). */
   refreshTokens: (): Promise<boolean> => tryRefresh(),
 
+  /** Profil professionnel du prestataire connecté (pré-remplissage + statut de validation). */
+  getMyPrestataireProfile: (): Promise<PrestataireProfile> =>
+    apiFetch("/api/prestataires/me"),
+
   patchPrestataire: (data: UpdatePrestatairePayload): Promise<void> =>
     apiFetch("/api/prestataires/me", { method: "PATCH", body: JSON.stringify(data) }),
 
@@ -291,6 +308,20 @@ export const api = {
   /** Documents légaux du prestataire courant (B9). */
   getDocuments: (): Promise<DocumentData[]> =>
     apiFetch("/api/prestataires/me/documents"),
+
+  /**
+   * Ouvre un document du prestataire connecté dans un nouvel onglet.
+   * Passe par fetch authentifié (JWT en header) puis crée une blob URL.
+   */
+  viewMyDocument: async (documentId: string): Promise<string> => {
+    const token = getAccessToken();
+    const res = await fetch(`${BASE}/api/prestataires/me/documents/${documentId}/file`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new ApiError(res.status, "Impossible d'ouvrir le document.");
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  },
 
   /** Dépose un document légal (multipart) — PRESTATAIRE uniquement. */
   uploadDocument: (type: TypeDocument, file: File): Promise<DocumentData> => {

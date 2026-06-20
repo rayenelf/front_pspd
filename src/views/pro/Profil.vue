@@ -25,14 +25,52 @@ const userForm = reactive({
 });
 
 const proForm = reactive({
-  nomCommercial:      "",   // chargé depuis /api/prestataires/me (dès B5)
+  nomCommercial:      "",
   categoriePrincipale: "",
   zoneIntervention:   "",
   rayonKm:            10,
   langues:            "",
 });
 
+// Statut de validation réel du dossier (chargé depuis /api/prestataires/me).
+const statutValidation = ref<string>("EN_ATTENTE");
+
+const STATUT_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
+  EN_ATTENTE:   { label: "En attente",      variant: "secondary" },
+  VERIFICATION: { label: "En vérification", variant: "secondary" },
+  VALIDE:       { label: "Validé",          variant: "default" },
+  SUSPENDU:     { label: "Refusé",          variant: "destructive" },
+};
+
+async function loadProfile() {
+  try {
+    const p = await api.getMyPrestataireProfile();
+    proForm.nomCommercial       = p.nomCommercial ?? "";
+    proForm.categoriePrincipale = p.categoriePrincipale ?? "";
+    proForm.zoneIntervention    = p.zoneIntervention ?? "";
+    proForm.rayonKm             = p.rayonKm ?? 10;
+    proForm.langues             = p.langues ?? "";
+    statutValidation.value      = p.statutValidation;
+  } catch {
+    /* silencieux : le formulaire reste éditable même si le chargement échoue */
+  }
+}
+
 // ── Documents légaux (B9) ───────────────────────────────────────────────────
+const openingDoc = ref<string | null>(null);   // id du document en cours d'ouverture
+
+async function openDocument(id: string) {
+  openingDoc.value = id;
+  try {
+    const url = await api.viewMyDocument(id);
+    window.open(url, "_blank");
+  } catch {
+    docMessage.value = { type: "error", text: "Impossible d'ouvrir le document." };
+  } finally {
+    openingDoc.value = null;
+  }
+}
+
 const DOC_TYPES: { value: TypeDocument; label: string }[] = [
   { value: "CIN",                 label: "Pièce d'identité (CIN)" },
   { value: "PATENTE_RC",          label: "Patente / RC" },
@@ -91,7 +129,10 @@ async function uploadDoc() {
   }
 }
 
-onMounted(loadDocuments);
+onMounted(() => {
+  loadDocuments();
+  loadProfile();
+});
 
 // ── Feedback ───────────────────────────────────────────────────────────────
 const saving  = ref(false);
@@ -275,12 +316,22 @@ async function toggle2fa(active: boolean) {
           <li
             v-for="d in docs"
             :key="d.id"
-            class="flex items-center justify-between rounded-lg border border-border p-3"
+            class="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
           >
-            <span>{{ typeLabel(d.type) }}</span>
-            <Badge :variant="d.statut === 'VALIDE' ? 'default' : 'secondary'">
-              {{ STATUT_LABEL[d.statut] ?? d.statut }}
-            </Badge>
+            <span class="font-medium">{{ typeLabel(d.type) }}</span>
+            <div class="flex items-center gap-2">
+              <Badge :variant="d.statut === 'VALIDE' ? 'default' : 'secondary'">
+                {{ STATUT_LABEL[d.statut] ?? d.statut }}
+              </Badge>
+              <Button
+                size="sm"
+                variant="outline"
+                :disabled="openingDoc === d.id"
+                @click="openDocument(d.id)"
+              >
+                {{ openingDoc === d.id ? "Ouverture…" : "Voir" }}
+              </Button>
+            </div>
           </li>
         </ul>
         <p v-else class="text-sm text-muted-foreground">Aucun document déposé pour le moment.</p>
@@ -366,7 +417,10 @@ async function toggle2fa(active: boolean) {
           <span>Compte</span><Badge>Actif</Badge>
         </div>
         <div class="flex items-center justify-between">
-          <span>Validation</span><Badge variant="secondary">En attente</Badge>
+          <span>Validation</span>
+          <Badge :variant="STATUT_BADGE[statutValidation]?.variant ?? 'secondary'">
+            {{ STATUT_BADGE[statutValidation]?.label ?? statutValidation }}
+          </Badge>
         </div>
         <div class="flex items-center justify-between">
           <span>Email</span>
