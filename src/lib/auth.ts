@@ -169,18 +169,24 @@ export type SignupRole = "CLIENT" | "PRESTATAIRE";
 
 export type ClientType = "PARTICULIER" | "ENTREPRISE";
 
+export type PrestataireType = "INDIVIDUEL" | "SOCIETE";
+
 export interface SignupPayload {
   role: SignupRole;
   type: ClientType;
+  typePrestataire?: PrestataireType;
   nom: string;
   prenom: string;
   email: string;
   telephone: string;
+  adresse: string;
   motDePasse: string;
+  cguAcceptees: boolean;
   raisonSociale?: string;
   matriculeFiscal?: string;
   nomCommercial?: string;
   categoriePrincipale?: string;
+  zoneIntervention?: string;
 }
 
 export interface SignupResponse {

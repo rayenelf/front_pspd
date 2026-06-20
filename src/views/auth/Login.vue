@@ -76,6 +76,12 @@ async function submitLogin() {
     if (msg === "EMAIL_NOT_VERIFIED") {
       needsVerification.value = true;
       errorMessage.value = "Votre email n'est pas encore vérifié.";
+    } else if (msg === "PRESTATAIRE_NOT_VALIDATED") {
+      errorMessage.value =
+        "Votre compte prestataire est en cours de validation. Vous pourrez vous connecter une fois votre dossier approuvé par notre équipe.";
+    } else if (msg === "ACCOUNT_SUSPENDED") {
+      errorMessage.value =
+        "Votre compte est suspendu. Contactez le support pour plus d'informations.";
     } else {
       errorMessage.value = msg;
     }
