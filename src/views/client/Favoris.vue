@@ -25,12 +25,12 @@ const pros = [
       <div class="mt-4 flex items-center gap-3 text-sm">
         <span class="flex items-center gap-1"><Star class="h-3.5 w-3.5 fill-primary text-primary" />{{ p.rating }}</span>
         <span class="text-muted-foreground">·</span>
-        <span class="text-muted-foreground">{{ p.jobs }} missions</span>
+        <span class="text-muted-foreground">{{ p.jobs }} {{ $t("client.favorites.missions") }}</span>
       </div>
       <p class="mt-2 font-display text-lg font-bold">{{ p.price }}</p>
       <div class="mt-4 flex gap-2">
-        <Button size="sm" class="flex-1 bg-gradient-warm text-primary-foreground">Réserver</Button>
-        <Button size="sm" variant="outline" class="flex-1">Message</Button>
+        <Button size="sm" class="flex-1 bg-gradient-warm text-primary-foreground">{{ $t("client.favorites.book") }}</Button>
+        <Button size="sm" variant="outline" class="flex-1">{{ $t("client.favorites.message") }}</Button>
       </div>
     </div>
   </div>

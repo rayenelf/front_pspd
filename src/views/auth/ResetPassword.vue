@@ -6,7 +6,9 @@ import Button from "@/components/ui/Button.vue";
 import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
 import { api, type ApiError } from "@/lib/api";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
@@ -31,7 +33,7 @@ async function submit() {
     await api.resetPassword(token.value, password.value);
     done.value = true;
   } catch (e) {
-    error.value = (e as ApiError).message || "Lien invalide ou expiré.";
+    error.value = (e as ApiError).message || t("auth.reset.invalidLink");
   } finally {
     submitting.value = false;
   }
@@ -39,36 +41,36 @@ async function submit() {
 
 onMounted(() => {
   token.value = (route.query.token as string) ?? "";
-  if (!token.value) error.value = "Lien de réinitialisation invalide (token manquant).";
+  if (!token.value) error.value = t("auth.reset.tokenMissing");
 });
 </script>
 
 <template>
   <AuthLayout
-    title="Nouveau mot de passe"
-    subtitle="Choisissez un nouveau mot de passe pour votre compte."
+    :title="$t('auth.reset.title')"
+    :subtitle="$t('auth.reset.subtitle')"
   >
     <div v-if="done" class="space-y-4 text-center">
       <div class="grid h-14 w-14 mx-auto place-items-center rounded-full bg-green-100 text-2xl">✓</div>
-      <p class="font-semibold text-green-700">Mot de passe réinitialisé !</p>
+      <p class="font-semibold text-green-700">{{ $t("auth.reset.doneTitle") }}</p>
       <p class="text-sm text-muted-foreground">
-        Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.
+        {{ $t("auth.reset.doneText") }}
       </p>
       <RouterLink to="/auth/login">
-        <Button class="bg-gradient-warm text-primary-foreground">Se connecter</Button>
+        <Button class="bg-gradient-warm text-primary-foreground">{{ $t("auth.reset.login") }}</Button>
       </RouterLink>
     </div>
 
     <form v-else class="space-y-4" @submit.prevent="submit">
       <div class="space-y-2">
-        <Label for="pw">Nouveau mot de passe</Label>
-        <Input id="pw" v-model="password" type="password" placeholder="Minimum 8 caractères" />
-        <p v-if="tooShort" class="text-xs text-red-600">Au moins 8 caractères.</p>
+        <Label for="pw">{{ $t("auth.reset.newPassword") }}</Label>
+        <Input id="pw" v-model="password" type="password" :placeholder="$t('auth.reset.passwordMin')" />
+        <p v-if="tooShort" class="text-xs text-red-600">{{ $t("auth.reset.tooShort") }}</p>
       </div>
       <div class="space-y-2">
-        <Label for="cpw">Confirmer le mot de passe</Label>
-        <Input id="cpw" v-model="confirm" type="password" placeholder="Retapez le mot de passe" />
-        <p v-if="mismatch" class="text-xs text-red-600">Les mots de passe ne correspondent pas.</p>
+        <Label for="cpw">{{ $t("auth.reset.confirm") }}</Label>
+        <Input id="cpw" v-model="confirm" type="password" :placeholder="$t('auth.reset.confirmPlaceholder')" />
+        <p v-if="mismatch" class="text-xs text-red-600">{{ $t("auth.reset.mismatch") }}</p>
       </div>
 
       <p v-if="error" class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{{ error }}</p>
@@ -78,12 +80,12 @@ onMounted(() => {
         class="w-full bg-gradient-warm text-primary-foreground shadow-glow"
         :disabled="!canSubmit || submitting"
       >
-        {{ submitting ? "Réinitialisation…" : "Réinitialiser mon mot de passe" }}
+        {{ submitting ? $t("auth.reset.submitting") : $t("auth.reset.submit") }}
       </Button>
     </form>
 
     <template #footer>
-      <RouterLink to="/auth/login" class="font-semibold text-primary hover:underline">Retour à la connexion</RouterLink>
+      <RouterLink to="/auth/login" class="font-semibold text-primary hover:underline">{{ $t("auth.backToLogin") }}</RouterLink>
     </template>
   </AuthLayout>
 </template>

@@ -30,13 +30,12 @@ function decide(choice: "accept" | "reject") {
     >
       <div class="mx-auto flex max-w-5xl flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p class="text-sm text-muted-foreground">
-          Nous utilisons des cookies pour améliorer votre expérience et mesurer l'audience.
-          En savoir plus dans notre
-          <RouterLink to="/confidentialite" class="font-medium text-primary hover:underline">politique de confidentialité</RouterLink>.
+          {{ $t("cookies.text") }}
+          <RouterLink to="/confidentialite" class="font-medium text-primary hover:underline">{{ $t("cookies.policy") }}</RouterLink>.
         </p>
         <div class="flex shrink-0 gap-2">
-          <Button variant="outline" size="sm" @click="decide('reject')">Refuser</Button>
-          <Button size="sm" class="bg-gradient-warm text-primary-foreground" @click="decide('accept')">Accepter</Button>
+          <Button variant="outline" size="sm" @click="decide('reject')">{{ $t("cookies.refuse") }}</Button>
+          <Button size="sm" class="bg-gradient-warm text-primary-foreground" @click="decide('accept')">{{ $t("cookies.accept") }}</Button>
         </div>
       </div>
     </div>

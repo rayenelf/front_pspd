@@ -6,7 +6,9 @@ import Button from "@/components/ui/Button.vue";
 import { useAuthStore } from "@/stores/auth";
 import { saveDeviceToken } from "@/lib/auth";
 import { api, type ApiError } from "@/lib/api";
+import { useI18n } from "vue-i18n";
 
+const { t }  = useI18n();
 const route  = useRoute();
 const router = useRouter();
 const auth   = useAuthStore();
@@ -78,7 +80,7 @@ async function sendOtp() {
     await api.send2faOtp(email.value);
     startCountdown();
   } catch {
-    sendError.value = "Impossible d'envoyer le code. Réessayez.";
+    sendError.value = t("auth.twofa.sendFail");
   }
 }
 
@@ -98,11 +100,11 @@ async function submit() {
   } catch (e) {
     const err = e as ApiError;
     if (err.status === 429) {
-      error.value = "Trop de tentatives incorrectes. Demandez un nouveau code.";
+      error.value = t("auth.twofa.tooManyAttempts");
       canResend.value = true;
       if (timer) clearInterval(timer);
     } else {
-      error.value = err.message || "Code incorrect. Réessayez.";
+      error.value = err.message || t("auth.twofa.wrongCode");
     }
     digits.value = Array(6).fill("");
     inputRefs.value[0]?.focus();
@@ -130,14 +132,14 @@ onUnmounted(() => {
 
 <template>
   <AuthLayout
-    title="Vérification en deux étapes"
-    subtitle="Un code à 6 chiffres a été envoyé à votre adresse."
+    :title="$t('auth.twofa.title')"
+    :subtitle="$t('auth.twofa.subtitle')"
   >
     <div class="space-y-6">
 
       <!-- Email affiché -->
       <p class="text-center text-sm text-muted-foreground">
-        Code envoyé à <span class="font-medium text-foreground">{{ email }}</span>
+        {{ $t("auth.twofa.codeSentTo") }} <span class="font-medium text-foreground">{{ email }}</span>
       </p>
 
       <!-- Inputs OTP -->
@@ -169,7 +171,7 @@ onUnmounted(() => {
       <!-- Se souvenir de cet appareil (#4) -->
       <label class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
         <input type="checkbox" v-model="rememberDevice" class="h-4 w-4 rounded border-border" />
-        Se souvenir de cet appareil (30 jours)
+        {{ $t("auth.twofa.rememberDevice") }}
       </label>
 
       <!-- Bouton vérifier -->
@@ -178,7 +180,7 @@ onUnmounted(() => {
         :disabled="!isComplete || submitting"
         @click="submit"
       >
-        {{ submitting ? "Vérification…" : "Vérifier le code" }}
+        {{ submitting ? $t("auth.twofa.verifying") : $t("auth.twofa.verify") }}
       </Button>
 
       <!-- Renvoi + countdown -->
@@ -188,11 +190,11 @@ onUnmounted(() => {
             class="font-semibold text-primary hover:underline"
             @click="sendOtp"
           >
-            Renvoyer un nouveau code
+            {{ $t("auth.twofa.resend") }}
           </button>
         </template>
         <template v-else>
-          Renvoyer dans
+          {{ $t("auth.twofa.resendInPrefix") }}
           <span class="font-medium tabular-nums text-foreground">{{ countdownDisplay }}</span>
         </template>
       </div>
@@ -202,7 +204,7 @@ onUnmounted(() => {
 
     <template #footer>
       <RouterLink to="/auth/login" class="font-semibold text-primary hover:underline">
-        Retour à la connexion
+        {{ $t("auth.backToLogin") }}
       </RouterLink>
     </template>
   </AuthLayout>

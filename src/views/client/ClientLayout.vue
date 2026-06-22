@@ -5,16 +5,16 @@ import type { NavItem } from "@/components/dashboard/types";
 import { LayoutDashboard, CalendarCheck, Receipt, Heart, User } from "lucide-vue-next";
 
 const items: NavItem[] = [
-  { to: "/client", label: "Vue d'ensemble", icon: LayoutDashboard },
-  { to: "/client/reservations", label: "Mes réservations", icon: CalendarCheck },
-  { to: "/client/factures", label: "Factures", icon: Receipt },
-  { to: "/client/favoris", label: "Favoris", icon: Heart },
-  { to: "/client/profil", label: "Profil", icon: User },
+  { to: "/client", labelKey: "dash.nav.clientOverview", icon: LayoutDashboard },
+  { to: "/client/reservations", labelKey: "dash.nav.clientReservations", icon: CalendarCheck },
+  { to: "/client/factures", labelKey: "dash.nav.clientInvoices", icon: Receipt },
+  { to: "/client/favoris", labelKey: "dash.nav.clientFavorites", icon: Heart },
+  { to: "/client/profil", labelKey: "dash.nav.clientProfile", icon: User },
 ];
 </script>
 
 <template>
-  <DashboardShell title="Espace Client" role="Client" :items="items">
+  <DashboardShell :title="$t('dash.titles.client')" role="Client" :items="items">
     <RouterView />
   </DashboardShell>
 </template>

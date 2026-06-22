@@ -8,7 +8,9 @@ import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
 import { useAuthStore } from "@/stores/auth";
 import { api, type ApiError } from "@/lib/api";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
 
@@ -27,8 +29,8 @@ async function confirmDelete() {
   } catch (e) {
     const err = e as ApiError;
     error.value = err.status === 403
-      ? "Mot de passe incorrect."
-      : err.message || "Échec de la suppression.";
+      ? t("account.danger.pwdWrong")
+      : err.message || t("account.danger.errGeneric");
   } finally {
     deleting.value = false;
   }
@@ -36,22 +38,21 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <PanelCard title="Zone de danger">
+  <PanelCard :title="$t('account.danger.title')">
     <p class="text-sm text-muted-foreground">
-      La suppression de votre compte est définitive. Vos données personnelles
-      seront anonymisées et vous serez déconnecté de tous vos appareils.
+      {{ $t("account.danger.desc") }}
     </p>
 
     <div v-if="!confirming" class="mt-4">
       <Button variant="outline" class="border-red-300 text-red-600 hover:bg-red-50" @click="confirming = true">
-        Supprimer mon compte
+        {{ $t("account.danger.deleteBtn") }}
       </Button>
     </div>
 
     <div v-else class="mt-4 space-y-3 rounded-lg border border-red-200 bg-red-50/50 p-4">
-      <p class="text-sm font-medium text-red-700">Confirmez la suppression définitive.</p>
+      <p class="text-sm font-medium text-red-700">{{ $t("account.danger.confirmTitle") }}</p>
       <div class="space-y-2">
-        <Label>Mot de passe <span class="text-xs text-muted-foreground">(si compte avec mot de passe)</span></Label>
+        <Label>{{ $t("account.danger.passwordLabel") }} <span class="text-xs text-muted-foreground">{{ $t("account.danger.passwordHint") }}</span></Label>
         <Input v-model="password" type="password" placeholder="••••••••" />
       </div>
       <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
@@ -61,9 +62,9 @@ async function confirmDelete() {
           :disabled="deleting"
           @click="confirmDelete"
         >
-          {{ deleting ? "Suppression…" : "Supprimer définitivement" }}
+          {{ deleting ? $t("account.danger.deleting") : $t("account.danger.deleteFinal") }}
         </Button>
-        <Button variant="outline" :disabled="deleting" @click="confirming = false">Annuler</Button>
+        <Button variant="outline" :disabled="deleting" @click="confirming = false">{{ $t("account.danger.cancel") }}</Button>
       </div>
     </div>
   </PanelCard>

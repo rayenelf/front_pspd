@@ -2,6 +2,7 @@
 // Injecte le JWT dans chaque requête, gère le refresh auto sur 401, et le
 // format d'erreur unifié.
 import { getAccessToken, getRefreshToken, saveSession, clearSession } from "@/lib/auth";
+import { currentLocale } from "@/i18n";
 
 // Base vide par défaut → les chemins "/api/..." passent par le proxy Vite
 // (/api → localhost:8081), ce qui évite les soucis de CORS en dev.
@@ -58,6 +59,8 @@ async function apiFetch<T>(path: string, options: RequestInit = {}, _retried = f
     ...options,
     headers: {
       ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      // Langue active → le backend renvoie messages d'erreur / emails localisés.
+      "Accept-Language": currentLocale(),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers as Record<string, string> ?? {}),
     },
