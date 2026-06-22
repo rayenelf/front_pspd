@@ -27,36 +27,36 @@ async function submit() {
 
 <template>
   <AuthLayout
-    title="Mot de passe oublié ?"
-    subtitle="Entrez votre email pour recevoir un lien de réinitialisation."
+    :title="$t('auth.forgot.title')"
+    :subtitle="$t('auth.forgot.subtitle')"
   >
     <div v-if="sent" class="space-y-4 text-center">
       <div class="grid h-14 w-14 mx-auto place-items-center rounded-full bg-green-100 text-2xl">📧</div>
       <p class="text-sm text-muted-foreground">
-        Si un compte existe pour <span class="font-medium text-foreground">{{ email }}</span>,
-        un lien de réinitialisation vient d'être envoyé. Vérifiez votre boîte mail (et vos spams).
+        {{ $t("auth.forgot.sentPrefix") }} <span class="font-medium text-foreground">{{ email }}</span>,
+        {{ $t("auth.forgot.sentSuffix") }}
       </p>
       <RouterLink to="/auth/login">
-        <Button class="bg-gradient-warm text-primary-foreground">Retour à la connexion</Button>
+        <Button class="bg-gradient-warm text-primary-foreground">{{ $t("auth.backToLogin") }}</Button>
       </RouterLink>
     </div>
 
     <form v-else class="space-y-4" @submit.prevent="submit">
       <div class="space-y-2">
-        <Label for="em">Email</Label>
-        <Input id="em" v-model="email" type="email" placeholder="vous@exemple.ma" />
+        <Label for="em">{{ $t("auth.emailLabel") }}</Label>
+        <Input id="em" v-model="email" type="email" :placeholder="$t('auth.emailPlaceholder')" />
       </div>
       <Button
         type="submit"
         class="w-full bg-gradient-warm text-primary-foreground shadow-glow"
         :disabled="submitting"
       >
-        {{ submitting ? "Envoi…" : "Envoyer le lien" }}
+        {{ submitting ? $t("auth.forgot.submitting") : $t("auth.forgot.submit") }}
       </Button>
     </form>
 
     <template #footer>
-      <RouterLink to="/auth/login" class="font-semibold text-primary hover:underline">Retour à la connexion</RouterLink>
+      <RouterLink to="/auth/login" class="font-semibold text-primary hover:underline">{{ $t("auth.backToLogin") }}</RouterLink>
     </template>
   </AuthLayout>
 </template>

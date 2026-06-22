@@ -18,16 +18,16 @@ defineProps<{ title: string; subtitle: string }>();
         </RouterLink>
         <div class="space-y-4">
           <p class="font-display text-3xl font-bold leading-tight">
-            Tous les services de la maison. <br />Réservés en confiance.
+            {{ $t("auth.brand.line1") }} <br />{{ $t("auth.brand.line2") }}
           </p>
           <p class="max-w-md text-primary-foreground/80">
-            Plus de 3 200 prestataires vérifiés, paiement sécurisé en séquestre, garantie satisfaction.
+            {{ $t("auth.brand.subtitle") }}
           </p>
         </div>
         <div class="flex gap-6 text-sm text-primary-foreground/80">
-          <div><p class="font-display text-2xl font-bold text-primary-foreground">4.9/5</p>Note moyenne</div>
-          <div><p class="font-display text-2xl font-bold text-primary-foreground">24/7</p>Support</div>
-          <div><p class="font-display text-2xl font-bold text-primary-foreground">12k+</p>Réservations</div>
+          <div><p class="font-display text-2xl font-bold text-primary-foreground">4.9/5</p>{{ $t("auth.brand.statRating") }}</div>
+          <div><p class="font-display text-2xl font-bold text-primary-foreground">24/7</p>{{ $t("auth.brand.statSupport") }}</div>
+          <div><p class="font-display text-2xl font-bold text-primary-foreground">12k+</p>{{ $t("auth.brand.statBookings") }}</div>
         </div>
       </div>
     </div>

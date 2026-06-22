@@ -1,3 +1,4 @@
 import type { Component } from "vue";
 
-export type NavItem = { to: string; label: string; icon: Component };
+// `labelKey` → clé i18n résolue dans DashboardShell via $t.
+export type NavItem = { to: string; labelKey: string; icon: Component };

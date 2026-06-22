@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import PanelCard from "@/components/dashboard/PanelCard.vue";
 import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
@@ -10,7 +10,9 @@ import DangerZone from "@/components/account/DangerZone.vue";
 import { getCurrentUser, getInitials, getDisplayName } from "@/lib/auth";
 import { useAuthStore } from "@/stores/auth";
 import { api, type ApiError } from "@/lib/api";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const auth = useAuthStore();
 
 // ── Données utilisateur depuis le JWT ──────────────────────────────────────
@@ -34,23 +36,23 @@ const isOAuth = !user?.prenom && !!user?.email; // compte sans mot de passe loca
 async function changePassword() {
   pwdMessage.value = null;
   if (newPwd.value.length < 8) {
-    pwdMessage.value = { type: "error", text: "Le nouveau mot de passe doit faire au moins 8 caractères." };
+    pwdMessage.value = { type: "error", text: t("client.profile.pwdTooShort") };
     return;
   }
   if (newPwd.value !== confPwd.value) {
-    pwdMessage.value = { type: "error", text: "Les mots de passe ne correspondent pas." };
+    pwdMessage.value = { type: "error", text: t("client.profile.pwdMismatch") };
     return;
   }
   pwdSaving.value = true;
   try {
     await api.changePassword(pwd.value || undefined, newPwd.value);
     pwd.value = ""; newPwd.value = ""; confPwd.value = "";
-    pwdMessage.value = { type: "success", text: "Mot de passe mis à jour. Vos autres appareils ont été déconnectés." };
+    pwdMessage.value = { type: "success", text: t("client.profile.pwdSuccess") };
   } catch (e) {
     const err = e as ApiError;
     pwdMessage.value = {
       type: "error",
-      text: err.status === 403 ? "Mot de passe actuel incorrect." : (err.message || "Erreur lors du changement."),
+      text: err.status === 403 ? t("client.profile.pwdWrong") : (err.message || t("client.profile.pwdErrGeneric")),
     };
   } finally {
     pwdSaving.value = false;
@@ -58,10 +60,10 @@ async function changePassword() {
 }
 
 const prefs = ref([
-  { label: "Emails de confirmation", value: true },
-  { label: "SMS de rappel",          value: true },
-  { label: "Notifications promo",    value: false },
-  { label: "Newsletter mensuelle",   value: true },
+  { labelKey: "client.profile.prefEmails", value: true },
+  { labelKey: "client.profile.prefSms",    value: true },
+  { labelKey: "client.profile.prefPromo",  value: false },
+  { labelKey: "client.profile.prefNewsletter", value: true },
 ]);
 
 // ── Feedback sauvegarde ────────────────────────────────────────────────────
@@ -80,14 +82,14 @@ async function save() {
     // Rafraîchit le JWT pour que le nom affiché (header) reflète les changements.
     await api.refreshTokens();
     auth.refreshFromStorage();
-    message.value = { type: "success", text: "Profil mis à jour avec succès." };
+    message.value = { type: "success", text: t("client.profile.saveSuccess") };
   } catch (e) {
     const err = e as ApiError;
     message.value = {
       type: "error",
       text: err.status === 401
-        ? "Session expirée — reconnectez-vous."
-        : "Erreur lors de la sauvegarde. Réessayez.",
+        ? t("client.profile.saveErr401")
+        : t("client.profile.saveErrGeneric"),
     };
   } finally {
     saving.value = false;
@@ -98,7 +100,18 @@ const initials    = user ? getInitials(user)     : "?";
 const displayName = user ? getDisplayName(user)  : "—";
 
 // ── 2FA ────────────────────────────────────────────────────────────────────
-const twoFaActive  = ref(false);   // sera sync depuis /api/users/me après B5
+const twoFaActive  = ref(false);
+
+// Synchronise l'état réel depuis le backend (sinon le toggle restait sur OFF
+// alors que le 2FA pouvait être actif en base → OTP reçu à chaque connexion).
+onMounted(async () => {
+  try {
+    const me = await api.getMe();
+    twoFaActive.value = me.doubleAuthActive;
+  } catch {
+    /* silencieux : on garde l'état par défaut */
+  }
+});
 const twoFaSaving  = ref(false);
 const twoFaMessage = ref<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -110,7 +123,7 @@ async function toggle2fa(active: boolean) {
     twoFaActive.value  = active;
     twoFaMessage.value = {
       type: "success",
-      text: active ? "Double authentification activée." : "Double authentification désactivée.",
+      text: active ? t("client.profile.twofaOn") : t("client.profile.twofaOff"),
     };
   } catch (e) {
     const err = e as ApiError;
@@ -118,8 +131,8 @@ async function toggle2fa(active: boolean) {
     twoFaMessage.value = {
       type: "error",
       text: err.status === 403 || err.status === 401
-        ? "Reconnectez-vous pour modifier ce paramètre."
-        : "Erreur lors de la modification. Réessayez.",
+        ? t("client.profile.twofaErrAuth")
+        : t("client.profile.twofaErrGeneric"),
     };
   } finally {
     twoFaSaving.value = false;
@@ -132,7 +145,7 @@ async function toggle2fa(active: boolean) {
     <div class="lg:col-span-2 space-y-6">
 
       <!-- Informations personnelles -->
-      <PanelCard title="Informations personnelles">
+      <PanelCard :title="$t('client.profile.personalInfo')">
 
         <!-- Avatar + nom -->
         <div class="mb-5 flex items-center gap-4">
@@ -147,24 +160,24 @@ async function toggle2fa(active: boolean) {
 
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="space-y-2">
-            <Label>Prénom</Label>
-            <Input v-model="form.prenom" placeholder="Votre prénom" />
+            <Label>{{ $t("client.profile.firstName") }}</Label>
+            <Input v-model="form.prenom" :placeholder="$t('client.profile.firstNamePlaceholder')" />
           </div>
           <div class="space-y-2">
-            <Label>Nom</Label>
-            <Input v-model="form.nom" placeholder="Votre nom" />
+            <Label>{{ $t("client.profile.lastName") }}</Label>
+            <Input v-model="form.nom" :placeholder="$t('client.profile.lastNamePlaceholder')" />
           </div>
           <div class="space-y-2">
-            <Label>Email</Label>
+            <Label>{{ $t("client.profile.email") }}</Label>
             <Input v-model="form.email" type="email" disabled class="opacity-60 cursor-not-allowed" />
           </div>
           <div class="space-y-2">
-            <Label>Téléphone</Label>
+            <Label>{{ $t("client.profile.phone") }}</Label>
             <Input v-model="form.tel" placeholder="+212 6 12 34 56 78" />
           </div>
           <div class="space-y-2 sm:col-span-2">
-            <Label>Adresse <span class="text-xs text-muted-foreground">(bientôt disponible)</span></Label>
-            <Input v-model="form.adresse" placeholder="12 rue des Orangers, Casablanca" disabled class="opacity-60 cursor-not-allowed" />
+            <Label>{{ $t("client.profile.address") }} <span class="text-xs text-muted-foreground">{{ $t("client.profile.addressSoon") }}</span></Label>
+            <Input v-model="form.adresse" :placeholder="$t('client.profile.addressPlaceholder')" disabled class="opacity-60 cursor-not-allowed" />
           </div>
         </div>
 
@@ -179,28 +192,27 @@ async function toggle2fa(active: boolean) {
           :disabled="saving"
           @click="save"
         >
-          {{ saving ? "Enregistrement…" : "Enregistrer" }}
+          {{ saving ? $t("client.profile.saving") : $t("client.profile.save") }}
         </Button>
       </PanelCard>
 
       <!-- Sécurité -->
-      <PanelCard title="Sécurité">
+      <PanelCard :title="$t('client.profile.security')">
         <div v-if="isOAuth" class="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
-          Votre compte est lié à un fournisseur (Google/Facebook). Vous pouvez définir
-          un mot de passe local ci-dessous (le champ « actuel » n'est pas requis).
+          {{ $t("client.profile.oauthNote") }}
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
           <div v-if="!isOAuth" class="space-y-2 sm:col-span-2">
-            <Label>Mot de passe actuel</Label>
+            <Label>{{ $t("client.profile.currentPassword") }}</Label>
             <Input v-model="pwd" type="password" placeholder="••••••••" autocomplete="current-password" />
           </div>
           <div class="space-y-2">
-            <Label>Nouveau mot de passe</Label>
-            <Input v-model="newPwd" type="password" placeholder="Minimum 8 caractères" autocomplete="new-password" />
+            <Label>{{ $t("client.profile.newPassword") }}</Label>
+            <Input v-model="newPwd" type="password" :placeholder="$t('client.profile.newPasswordPlaceholder')" autocomplete="new-password" />
           </div>
           <div class="space-y-2">
-            <Label>Confirmer</Label>
-            <Input v-model="confPwd" type="password" placeholder="Retapez le mot de passe" autocomplete="new-password" />
+            <Label>{{ $t("client.profile.confirm") }}</Label>
+            <Input v-model="confPwd" type="password" :placeholder="$t('client.profile.confirmPlaceholder')" autocomplete="new-password" />
           </div>
         </div>
 
@@ -210,16 +222,16 @@ async function toggle2fa(active: boolean) {
         ]">{{ pwdMessage.text }}</p>
 
         <Button variant="outline" class="mt-5" :disabled="pwdSaving" @click="changePassword">
-          {{ pwdSaving ? "Mise à jour…" : "Mettre à jour le mot de passe" }}
+          {{ pwdSaving ? $t("client.profile.updating") : $t("client.profile.updatePassword") }}
         </Button>
 
         <!-- Double authentification -->
         <div class="mt-6 border-t border-border pt-5">
           <div class="flex items-center justify-between">
             <div>
-              <p class="font-medium text-sm">Double authentification (2FA)</p>
+              <p class="font-medium text-sm">{{ $t("client.profile.twofa") }}</p>
               <p class="text-xs text-muted-foreground mt-0.5">
-                À chaque connexion, un code à 6 chiffres vous sera demandé.
+                {{ $t("client.profile.twofaDesc") }}
               </p>
             </div>
             <Switch
@@ -243,10 +255,10 @@ async function toggle2fa(active: boolean) {
     </div>
 
     <!-- Préférences -->
-    <PanelCard title="Préférences notifications">
+    <PanelCard :title="$t('client.profile.prefsTitle')">
       <div class="space-y-4 text-sm">
-        <div v-for="p in prefs" :key="p.label" class="flex items-center justify-between">
-          <span>{{ p.label }}</span>
+        <div v-for="p in prefs" :key="p.labelKey" class="flex items-center justify-between">
+          <span>{{ $t(p.labelKey) }}</span>
           <Switch v-model="p.value" />
         </div>
       </div>

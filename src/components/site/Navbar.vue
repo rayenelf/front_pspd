@@ -3,11 +3,13 @@ import { ref } from "vue";
 import { RouterLink } from "vue-router";
 import { Menu, MapPin } from "lucide-vue-next";
 import Button from "@/components/ui/Button.vue";
+import LanguageSwitcher from "@/components/site/LanguageSwitcher.vue";
 
+// `labelKey` → clé i18n résolue dans le <template> via $t.
 const links = [
-  { to: "/services", label: "Services" },
-  { to: "/comment-ca-marche", label: "Comment ça marche" },
-  { to: "/devenir-prestataire", label: "Devenir prestataire" },
+  { to: "/services", labelKey: "nav.services" },
+  { to: "/comment-ca-marche", labelKey: "nav.howItWorks" },
+  { to: "/devenir-prestataire", labelKey: "nav.becomePro" },
 ];
 
 const open = ref(false);
@@ -30,21 +32,22 @@ const open = ref(false);
           class="text-sm font-medium text-foreground/80 transition hover:text-foreground"
           active-class="text-primary"
         >
-          {{ l.label }}
+          {{ $t(l.labelKey) }}
         </RouterLink>
       </nav>
       <div class="hidden items-center gap-2 md:flex">
+        <LanguageSwitcher />
         <RouterLink to="/auth/login">
-          <Button variant="ghost" size="sm">Se connecter</Button>
+          <Button variant="ghost" size="sm">{{ $t("common.login") }}</Button>
         </RouterLink>
         <RouterLink to="/auth/signup">
           <Button size="sm" class="bg-gradient-warm text-primary-foreground shadow-glow hover:opacity-95">
-            S'inscrire
+            {{ $t("common.signup") }}
           </Button>
         </RouterLink>
       </div>
       <button
-        aria-label="Menu"
+        :aria-label="$t('nav.menu')"
         @click="open = !open"
         class="grid h-10 w-10 place-items-center rounded-md border border-border md:hidden"
       >
@@ -60,11 +63,12 @@ const open = ref(false);
           @click="open = false"
           class="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
         >
-          {{ l.label }}
+          {{ $t(l.labelKey) }}
         </RouterLink>
+        <div class="mt-3"><LanguageSwitcher /></div>
         <div class="mt-2 flex gap-2">
-          <RouterLink to="/auth/login" class="flex-1"><Button variant="outline" class="w-full">Se connecter</Button></RouterLink>
-          <RouterLink to="/auth/signup" class="flex-1"><Button class="w-full bg-gradient-warm text-primary-foreground">S'inscrire</Button></RouterLink>
+          <RouterLink to="/auth/login" class="flex-1"><Button variant="outline" class="w-full">{{ $t("common.login") }}</Button></RouterLink>
+          <RouterLink to="/auth/signup" class="flex-1"><Button class="w-full bg-gradient-warm text-primary-foreground">{{ $t("common.signup") }}</Button></RouterLink>
         </div>
       </div>
     </div>

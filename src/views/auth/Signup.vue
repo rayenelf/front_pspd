@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button.vue";
 import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
 import { cn } from "@/lib/utils";
+import { useI18n } from "vue-i18n";
 import { api, type CategorieData } from "@/lib/api";
 import {
   registerAccount,
@@ -17,6 +18,7 @@ import {
 } from "@/lib/auth";
 
 const router = useRouter();
+const { t } = useI18n();
 
 const role = ref<SignupRole>("CLIENT");
 const form = reactive({
@@ -71,37 +73,37 @@ async function submitSignup() {
   successMessage.value = "";
 
   if (!form.adresse.trim()) {
-    errorMessage.value = "L'adresse est requise.";
+    errorMessage.value = t("auth.signup.errAddress");
     return;
   }
 
   if (form.motDePasse.length < 8) {
-    errorMessage.value = "Le mot de passe doit contenir au moins 8 caractères.";
+    errorMessage.value = t("auth.signup.errPwLen");
     return;
   }
 
   if (form.motDePasse !== form.confirmation) {
-    errorMessage.value = "Les mots de passe ne correspondent pas.";
+    errorMessage.value = t("auth.signup.errPwMatch");
     return;
   }
 
   if (isPrestataire.value) {
     if (!form.nomCommercial.trim()) {
-      errorMessage.value = "Le nom commercial est requis.";
+      errorMessage.value = t("auth.signup.errNomCommercial");
       return;
     }
     if (!form.categoriePrincipale) {
-      errorMessage.value = "La catégorie d'activité est requise.";
+      errorMessage.value = t("auth.signup.errCategory");
       return;
     }
     if (!form.zoneIntervention.trim()) {
-      errorMessage.value = "La zone d'intervention est requise.";
+      errorMessage.value = t("auth.signup.errZone");
       return;
     }
   }
 
   if (!cguAcceptees.value) {
-    errorMessage.value = "Vous devez accepter les CGU et la politique de confidentialité.";
+    errorMessage.value = t("auth.signup.errCgu");
     return;
   }
 
@@ -126,10 +128,10 @@ async function submitSignup() {
       zoneIntervention: isPrestataire.value ? form.zoneIntervention.trim() : undefined,
     });
 
-    successMessage.value = "Compte créé. Vérifie tes messages pour poursuivre la validation.";
+    successMessage.value = t("auth.signup.success");
     await router.push("/auth/login");
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "Une erreur est survenue.";
+    errorMessage.value = error instanceof Error ? error.message : t("auth.signup.genericError");
   } finally {
     isSubmitting.value = false;
   }
@@ -138,8 +140,8 @@ async function submitSignup() {
 
 <template>
   <AuthLayout
-    title="Créer votre compte"
-    subtitle="Rejoignez Domivo en moins d'une minute."
+    :title="$t('auth.signup.title')"
+    :subtitle="$t('auth.signup.subtitle')"
   >
     <div class="mb-5 grid grid-cols-2 gap-2 rounded-lg border border-border p-1">
       <button
@@ -154,72 +156,72 @@ async function submitSignup() {
             : 'text-foreground/70 hover:bg-muted'
         )"
       >
-        {{ r === "client" ? "Je cherche un service" : "Je suis prestataire" }}
+        {{ r === "client" ? $t("auth.signup.roleClient") : $t("auth.signup.rolePro") }}
       </button>
     </div>
     <form class="space-y-4" @submit.prevent="submitSignup">
       <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-2"><Label for="fn">Prénom</Label><Input id="fn" v-model="form.prenom" autocomplete="given-name" placeholder="Salma" /></div>
-        <div class="space-y-2"><Label for="ln">Nom</Label><Input id="ln" v-model="form.nom" autocomplete="family-name" placeholder="Bennani" /></div>
+        <div class="space-y-2"><Label for="fn">{{ $t("auth.signup.firstName") }}</Label><Input id="fn" v-model="form.prenom" autocomplete="given-name" placeholder="Salma" /></div>
+        <div class="space-y-2"><Label for="ln">{{ $t("auth.signup.lastName") }}</Label><Input id="ln" v-model="form.nom" autocomplete="family-name" placeholder="Bennani" /></div>
       </div>
-      <div class="space-y-2"><Label for="em">Email</Label><Input id="em" v-model="form.email" type="email" autocomplete="email" placeholder="vous@exemple.ma" /></div>
-      <div class="space-y-2"><Label for="ph">Téléphone</Label><Input id="ph" v-model="form.telephone" autocomplete="tel" placeholder="+212 6 12 34 56 78" /></div>
-      <div class="space-y-2"><Label for="ad">Adresse</Label><Input id="ad" v-model="form.adresse" autocomplete="street-address" placeholder="12 rue de la Liberté, Tunis" /></div>
+      <div class="space-y-2"><Label for="em">{{ $t("auth.emailLabel") }}</Label><Input id="em" v-model="form.email" type="email" autocomplete="email" :placeholder="$t('auth.emailPlaceholder')" /></div>
+      <div class="space-y-2"><Label for="ph">{{ $t("auth.signup.phone") }}</Label><Input id="ph" v-model="form.telephone" autocomplete="tel" placeholder="+212 6 12 34 56 78" /></div>
+      <div class="space-y-2"><Label for="ad">{{ $t("auth.signup.address") }}</Label><Input id="ad" v-model="form.adresse" autocomplete="street-address" :placeholder="$t('auth.signup.addressPlaceholder')" /></div>
 
       <!-- ── CLIENT : particulier / entreprise ────────────────────────── -->
       <div v-if="!isPrestataire" class="space-y-2">
-        <Label for="type">Type de compte</Label>
+        <Label for="type">{{ $t("auth.signup.accountType") }}</Label>
         <select
           id="type"
           v-model="form.type"
           class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
         >
-          <option value="PARTICULIER">Particulier</option>
-          <option value="ENTREPRISE">Entreprise</option>
+          <option value="PARTICULIER">{{ $t("auth.signup.particulier") }}</option>
+          <option value="ENTREPRISE">{{ $t("auth.signup.entreprise") }}</option>
         </select>
       </div>
       <div v-if="!isPrestataire && isEntreprise" class="grid gap-3 sm:grid-cols-2">
-        <div class="space-y-2"><Label for="rs">Raison sociale</Label><Input id="rs" v-model="form.raisonSociale" placeholder="Société Atlas" /></div>
-        <div class="space-y-2"><Label for="mf">Matricule fiscal</Label><Input id="mf" v-model="form.matriculeFiscal" placeholder="1234567P" /></div>
+        <div class="space-y-2"><Label for="rs">{{ $t("auth.signup.raisonSociale") }}</Label><Input id="rs" v-model="form.raisonSociale" placeholder="Société Atlas" /></div>
+        <div class="space-y-2"><Label for="mf">{{ $t("auth.signup.matricule") }}</Label><Input id="mf" v-model="form.matriculeFiscal" placeholder="1234567P" /></div>
       </div>
 
       <!-- ── PRESTATAIRE : individuel / société + activité ─────────────── -->
       <div v-if="isPrestataire" class="space-y-2">
-        <Label for="typep">Type de prestataire</Label>
+        <Label for="typep">{{ $t("auth.signup.prestaType") }}</Label>
         <select
           id="typep"
           v-model="form.typePrestataire"
           class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
         >
-          <option value="INDIVIDUEL">Individuel (artisan, technicien, freelance)</option>
-          <option value="SOCIETE">Société prestataire (plusieurs employés)</option>
+          <option value="INDIVIDUEL">{{ $t("auth.signup.individuel") }}</option>
+          <option value="SOCIETE">{{ $t("auth.signup.societe") }}</option>
         </select>
       </div>
       <div v-if="isPrestataire && isSociete" class="grid gap-3 sm:grid-cols-2">
-        <div class="space-y-2"><Label for="rsp">Raison sociale</Label><Input id="rsp" v-model="form.raisonSociale" placeholder="Atlas Services SARL" /></div>
-        <div class="space-y-2"><Label for="mfp">Matricule fiscal</Label><Input id="mfp" v-model="form.matriculeFiscal" placeholder="1234567P" /></div>
+        <div class="space-y-2"><Label for="rsp">{{ $t("auth.signup.raisonSociale") }}</Label><Input id="rsp" v-model="form.raisonSociale" placeholder="Atlas Services SARL" /></div>
+        <div class="space-y-2"><Label for="mfp">{{ $t("auth.signup.matricule") }}</Label><Input id="mfp" v-model="form.matriculeFiscal" placeholder="1234567P" /></div>
       </div>
       <div v-if="isPrestataire" class="space-y-2">
-        <Label for="mc">Nom commercial</Label>
+        <Label for="mc">{{ $t("auth.signup.nomCommercial") }}</Label>
         <Input id="mc" v-model="form.nomCommercial" placeholder="ElecPro" />
       </div>
       <div v-if="isPrestataire" class="space-y-2">
-        <Label for="cp">Catégorie d'activité</Label>
+        <Label for="cp">{{ $t("auth.signup.category") }}</Label>
         <select
           id="cp"
           v-model="form.categoriePrincipale"
           class="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
         >
-          <option value="" disabled>Sélectionnez une catégorie…</option>
+          <option value="" disabled>{{ $t("auth.signup.selectCategory") }}</option>
           <option v-for="c in categories" :key="c.id" :value="c.libelle">{{ c.libelle }}</option>
         </select>
       </div>
       <div v-if="isPrestataire" class="space-y-2">
-        <Label for="zi">Zone d'intervention</Label>
-        <Input id="zi" v-model="form.zoneIntervention" placeholder="Tunis, Ariana, La Marsa…" />
+        <Label for="zi">{{ $t("auth.signup.zone") }}</Label>
+        <Input id="zi" v-model="form.zoneIntervention" :placeholder="$t('auth.signup.zonePlaceholder')" />
       </div>
-      <div class="space-y-2"><Label for="pw">Mot de passe</Label><Input id="pw" v-model="form.motDePasse" type="password" autocomplete="new-password" placeholder="Minimum 8 caractères" /></div>
-      <div class="space-y-2"><Label for="cpw">Confirmer le mot de passe</Label><Input id="cpw" v-model="form.confirmation" type="password" autocomplete="new-password" placeholder="Retapez le mot de passe" /></div>
+      <div class="space-y-2"><Label for="pw">{{ $t("auth.signup.password") }}</Label><Input id="pw" v-model="form.motDePasse" type="password" autocomplete="new-password" :placeholder="$t('auth.signup.passwordMin')" /></div>
+      <div class="space-y-2"><Label for="cpw">{{ $t("auth.signup.confirmPassword") }}</Label><Input id="cpw" v-model="form.confirmation" type="password" autocomplete="new-password" :placeholder="$t('auth.signup.confirmPlaceholder')" /></div>
       <p v-if="errorMessage" class="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">{{ errorMessage }}</p>
       <p v-else-if="successMessage" class="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700">{{ successMessage }}</p>
       <label class="flex items-start gap-2 text-xs text-muted-foreground">
@@ -229,19 +231,19 @@ async function submitSignup() {
           class="mt-0.5 h-4 w-4 shrink-0 rounded border-input accent-primary"
         />
         <span>
-          J'accepte les
-          <RouterLink to="/cgu" class="font-medium text-primary hover:underline">conditions générales d'utilisation</RouterLink>
-          et la
-          <RouterLink to="/confidentialite" class="font-medium text-primary hover:underline">politique de confidentialité</RouterLink>
-          (RGPD).
+          {{ $t("auth.signup.acceptPrefix") }}
+          <RouterLink to="/cgu" class="font-medium text-primary hover:underline">{{ $t("auth.signup.cgu") }}</RouterLink>
+          {{ $t("auth.signup.and") }}
+          <RouterLink to="/confidentialite" class="font-medium text-primary hover:underline">{{ $t("auth.signup.privacy") }}</RouterLink>
+          {{ $t("auth.signup.rgpdSuffix") }}
         </span>
       </label>
       <Button type="submit" class="w-full bg-gradient-warm text-primary-foreground shadow-glow" :disabled="isSubmitting">
-        {{ isSubmitting ? "Création en cours…" : role === "CLIENT" ? "Créer mon compte" : "Devenir prestataire" }}
+        {{ isSubmitting ? $t("auth.signup.submitting") : role === "CLIENT" ? $t("auth.signup.submitClient") : $t("auth.signup.submitPro") }}
       </Button>
       <div class="relative py-2 text-center text-xs uppercase text-muted-foreground">
         <span class="absolute inset-0 top-1/2 -z-10 h-px bg-border" />
-        <span class="bg-background px-3">ou continuer avec</span>
+        <span class="bg-background px-3">{{ $t("auth.orContinue") }}</span>
       </div>
       <Button variant="outline" type="button" class="w-full gap-2" @click="signupWithGoogle">
         <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" xmlns="http://www.w3.org/2000/svg">
@@ -250,16 +252,16 @@ async function submitSignup() {
           <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
         </svg>
-      {{ role === "CLIENT" ? "S'inscrire en tant que client avec Google" : "S'inscrire en tant que prestataire avec Google" }}      </Button>
+      {{ role === "CLIENT" ? $t("auth.signup.googleClient") : $t("auth.signup.googlePro") }}      </Button>
       <Button variant="outline" type="button" class="w-full gap-2" @click="signupWithFacebook">
         <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" xmlns="http://www.w3.org/2000/svg">
           <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.01 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.69.24 2.69.24v2.97h-1.52c-1.49 0-1.95.93-1.95 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.08 24 18.09 24 12.07z" fill="#1877F2"/>
         </svg>
-        Continuer avec Facebook
+        {{ $t("auth.signup.facebook") }}
       </Button>
     </form>
     <template #footer>
-      Déjà inscrit ? <RouterLink to="/auth/login" class="font-semibold text-primary hover:underline">Se connecter</RouterLink>
+      {{ $t("auth.signup.already") }} <RouterLink to="/auth/login" class="font-semibold text-primary hover:underline">{{ $t("auth.signup.login") }}</RouterLink>
     </template>
   </AuthLayout>
 </template>

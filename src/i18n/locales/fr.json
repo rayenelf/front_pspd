@@ -1,0 +1,545 @@
+{
+  "common": {
+    "login": "Se connecter",
+    "signup": "S'inscrire",
+    "logout": "Se déconnecter",
+    "loading": "Chargement…",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "learnMore": "En savoir plus"
+  },
+  "nav": {
+    "services": "Services",
+    "howItWorks": "Comment ça marche",
+    "becomePro": "Devenir prestataire",
+    "menu": "Menu"
+  },
+  "lang": {
+    "label": "Langue",
+    "fr": "Français",
+    "en": "Anglais"
+  },
+  "home": {
+    "hero": {
+      "badge": "+2 400 pros vérifiés près de chez vous",
+      "title1": "Un pro à domicile,",
+      "title2": "en quelques clics.",
+      "subtitle": "Ménage, plomberie, électricité, jardinage… Réservez le bon prestataire, au bon prix, près de chez vous.",
+      "servicePlaceholder": "Quel service ?",
+      "cityPlaceholder": "Votre ville",
+      "search": "Rechercher",
+      "clients": "clients satisfaits",
+      "ratingAvg": "en moyenne",
+      "proName": "Karim · Plombier certifié",
+      "proEta": "Arrive dans 25 min · 4,9 ★",
+      "proStatus": "En route",
+      "escrowLabel": "Paiement séquestre",
+      "escrowValue": "100% sécurisé"
+    },
+    "stats": {
+      "clientsServed": "Clients servis",
+      "prosVerified": "Pros vérifiés",
+      "avgRating": "Note moyenne",
+      "responseTime": "Temps de réponse"
+    },
+    "categories": {
+      "eyebrow": "Catégories",
+      "title": "Tout ce dont votre foyer a besoin",
+      "seeAll": "Voir tous les services",
+      "from": "dès"
+    },
+    "how": {
+      "eyebrow": "Comment ça marche",
+      "title": "Trois étapes. Zéro stress.",
+      "step": "Étape",
+      "steps": {
+        "choose": {
+          "title": "Choisissez votre service",
+          "desc": "Décrivez votre besoin et votre adresse. Le bon pro vous trouve en quelques secondes."
+        },
+        "book": {
+          "title": "Réservez ou demandez un devis",
+          "desc": "Créneau immédiat ou devis personnalisé. Vous validez, le pro confirme."
+        },
+        "enjoy": {
+          "title": "Profitez & payez en sécurité",
+          "desc": "Le paiement est libéré uniquement quand la mission est validée. Zéro mauvaise surprise."
+        }
+      }
+    },
+    "testimonials": {
+      "eyebrow": "Témoignages",
+      "title": "Ils ne jurent plus que par Domivo",
+      "items": {
+        "t1": { "text": "J'ai réservé un plombier à 21h, il était là à 21h25. Devis clair, travail nickel." },
+        "t2": { "text": "Le ménage hebdo a changé ma vie. Toujours la même équipe, super sympas." },
+        "t3": { "text": "Soutien scolaire pour ma fille — résultats visibles en 2 mois. Bravo Domivo." }
+      }
+    },
+    "proCta": {
+      "eyebrow": "Prestataires",
+      "title": "Développez votre activité avec Domivo",
+      "subtitle": "Rejoignez le réseau des pros les mieux notés et faites grandir votre clientèle.",
+      "bullets": {
+        "missions": "Recevez des missions près de chez vous",
+        "agenda": "Gérez votre agenda et vos devis",
+        "payment": "Encaissez vos paiements en 48h"
+      }
+    }
+  },
+  "footer": {
+    "tagline": "La plateforme qui connecte particuliers et pros pour tous les services à domicile.",
+    "cols": {
+      "services": "Services",
+      "company": "Entreprise",
+      "help": "Aide"
+    },
+    "company": {
+      "about": "À propos",
+      "careers": "Carrières",
+      "press": "Presse",
+      "blog": "Blog"
+    },
+    "help": {
+      "center": "Centre d'aide",
+      "contact": "Contact",
+      "terms": "Conditions",
+      "privacy": "Confidentialité"
+    },
+    "rights": "© {year} Domivo. Tous droits réservés.",
+    "crafted": "Conçu avec soin en Méditerranée."
+  },
+  "cookies": {
+    "text": "Nous utilisons des cookies pour améliorer votre expérience et mesurer l'audience. En savoir plus dans notre",
+    "policy": "politique de confidentialité",
+    "refuse": "Refuser",
+    "accept": "Accepter"
+  },
+  "services": {
+    "menage": { "name": "Ménage", "tagline": "Maison propre, esprit léger" },
+    "bricolage": { "name": "Bricolage", "tagline": "Petites mains, gros résultats" },
+    "plomberie": { "name": "Plomberie", "tagline": "Fuite ? Réparée." },
+    "electricite": { "name": "Électricité", "tagline": "En toute sécurité" },
+    "jardinage": { "name": "Jardinage", "tagline": "Un extérieur qui respire" },
+    "climatisation": { "name": "Climatisation", "tagline": "Confort toute l'année" },
+    "electromenager": { "name": "Électroménager", "tagline": "Réparation rapide" },
+    "demenagement": { "name": "Déménagement", "tagline": "On porte, on roule" },
+    "peinture": { "name": "Peinture", "tagline": "Murs comme neufs" },
+    "soutien-scolaire": { "name": "Soutien scolaire", "tagline": "Réussir, ensemble" },
+    "garde-enfants": { "name": "Garde d'enfants", "tagline": "Personnes de confiance" },
+    "informatique": { "name": "Informatique", "tagline": "Dépannage à domicile" },
+    "livraison": { "name": "Livraison", "tagline": "Rapide et fiable" },
+    "montage-meubles": { "name": "Montage meubles", "tagline": "Plus de notice cassée" }
+  },
+  "auth": {
+    "emailLabel": "Email",
+    "passwordLabel": "Mot de passe",
+    "emailPlaceholder": "vous{'@'}exemple.ma",
+    "orContinue": "ou continuer avec",
+    "backToLogin": "Retour à la connexion",
+    "brand": {
+      "line1": "Tous les services de la maison.",
+      "line2": "Réservés en confiance.",
+      "subtitle": "Plus de 3 200 prestataires vérifiés, paiement sécurisé en séquestre, garantie satisfaction.",
+      "statRating": "Note moyenne",
+      "statSupport": "Support",
+      "statBookings": "Réservations"
+    },
+    "login": {
+      "title": "Bon retour 👋",
+      "subtitle": "Connectez-vous pour gérer vos réservations et prestations.",
+      "forgot": "Oublié ?",
+      "remember": "Se souvenir de moi",
+      "submit": "Se connecter",
+      "submitting": "Connexion…",
+      "noAccount": "Pas encore de compte ?",
+      "createAccount": "Créer un compte",
+      "credentialsRequired": "Email et mot de passe requis.",
+      "invalidResponse": "Réponse de connexion invalide (tokens manquants).",
+      "genericError": "Erreur de connexion.",
+      "notVerified": "Votre email n'est pas encore vérifié.",
+      "suspended": "Votre compte est suspendu. Contactez le support pour plus d'informations.",
+      "checkInbox": "Vérifiez votre boîte mail, ou",
+      "resend": "renvoyer le lien",
+      "resending": "envoi…",
+      "resentOk": "📧 Lien de vérification renvoyé — consultez votre boîte mail."
+    },
+    "signup": {
+      "title": "Créer votre compte",
+      "subtitle": "Rejoignez Domivo en moins d'une minute.",
+      "roleClient": "Je cherche un service",
+      "rolePro": "Je suis prestataire",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "phone": "Téléphone",
+      "address": "Adresse",
+      "addressPlaceholder": "12 rue de la Liberté, Tunis",
+      "accountType": "Type de compte",
+      "particulier": "Particulier",
+      "entreprise": "Entreprise",
+      "raisonSociale": "Raison sociale",
+      "matricule": "Matricule fiscal",
+      "prestaType": "Type de prestataire",
+      "individuel": "Individuel (artisan, technicien, freelance)",
+      "societe": "Société prestataire (plusieurs employés)",
+      "nomCommercial": "Nom commercial",
+      "category": "Catégorie d'activité",
+      "selectCategory": "Sélectionnez une catégorie…",
+      "zone": "Zone d'intervention",
+      "zonePlaceholder": "Tunis, Ariana, La Marsa…",
+      "password": "Mot de passe",
+      "passwordMin": "Minimum 8 caractères",
+      "confirmPassword": "Confirmer le mot de passe",
+      "confirmPlaceholder": "Retapez le mot de passe",
+      "acceptPrefix": "J'accepte les",
+      "cgu": "conditions générales d'utilisation",
+      "and": "et la",
+      "privacy": "politique de confidentialité",
+      "rgpdSuffix": "(RGPD).",
+      "submitClient": "Créer mon compte",
+      "submitPro": "Devenir prestataire",
+      "submitting": "Création en cours…",
+      "googleClient": "S'inscrire en tant que client avec Google",
+      "googlePro": "S'inscrire en tant que prestataire avec Google",
+      "facebook": "Continuer avec Facebook",
+      "already": "Déjà inscrit ?",
+      "login": "Se connecter",
+      "errAddress": "L'adresse est requise.",
+      "errPwLen": "Le mot de passe doit contenir au moins 8 caractères.",
+      "errPwMatch": "Les mots de passe ne correspondent pas.",
+      "errNomCommercial": "Le nom commercial est requis.",
+      "errCategory": "La catégorie d'activité est requise.",
+      "errZone": "La zone d'intervention est requise.",
+      "errCgu": "Vous devez accepter les CGU et la politique de confidentialité.",
+      "success": "Compte créé. Vérifie tes messages pour poursuivre la validation.",
+      "genericError": "Une erreur est survenue."
+    },
+    "forgot": {
+      "title": "Mot de passe oublié ?",
+      "subtitle": "Entrez votre email pour recevoir un lien de réinitialisation.",
+      "sentPrefix": "Si un compte existe pour",
+      "sentSuffix": "un lien de réinitialisation vient d'être envoyé. Vérifiez votre boîte mail (et vos spams).",
+      "submit": "Envoyer le lien",
+      "submitting": "Envoi…"
+    },
+    "reset": {
+      "title": "Nouveau mot de passe",
+      "subtitle": "Choisissez un nouveau mot de passe pour votre compte.",
+      "doneTitle": "Mot de passe réinitialisé !",
+      "doneText": "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+      "newPassword": "Nouveau mot de passe",
+      "passwordMin": "Minimum 8 caractères",
+      "tooShort": "Au moins 8 caractères.",
+      "confirm": "Confirmer le mot de passe",
+      "confirmPlaceholder": "Retapez le mot de passe",
+      "mismatch": "Les mots de passe ne correspondent pas.",
+      "submit": "Réinitialiser mon mot de passe",
+      "submitting": "Réinitialisation…",
+      "login": "Se connecter",
+      "invalidLink": "Lien invalide ou expiré.",
+      "tokenMissing": "Lien de réinitialisation invalide (token manquant)."
+    },
+    "twofa": {
+      "title": "Vérification en deux étapes",
+      "subtitle": "Un code à 6 chiffres a été envoyé à votre adresse.",
+      "codeSentTo": "Code envoyé à",
+      "rememberDevice": "Se souvenir de cet appareil (30 jours)",
+      "verify": "Vérifier le code",
+      "verifying": "Vérification…",
+      "resend": "Renvoyer un nouveau code",
+      "resendInPrefix": "Renvoyer dans",
+      "tooManyAttempts": "Trop de tentatives incorrectes. Demandez un nouveau code.",
+      "wrongCode": "Code incorrect. Réessayez.",
+      "sendFail": "Impossible d'envoyer le code. Réessayez."
+    },
+    "verifyEmail": {
+      "title": "Vérification de l'email",
+      "subtitle": "Activation de votre compte Domivo.",
+      "verifying": "Vérification en cours…",
+      "successTitle": "Votre email est confirmé !",
+      "successText": "Vous pouvez maintenant vous connecter.",
+      "login": "Se connecter",
+      "invalidToken": "Lien de vérification invalide (token manquant).",
+      "fail": "Échec de la vérification."
+    },
+    "oauth": {
+      "connecting": "Connexion en cours…",
+      "googleFailed": "Connexion Google échouée : tokens manquants."
+    }
+  },
+  "pages": {
+    "notFound": {
+      "title": "Page introuvable",
+      "text": "La page que vous cherchez n'existe pas ou a été déplacée.",
+      "home": "Retour à l'accueil"
+    },
+    "how": {
+      "eyebrow": "Notre fonctionnement",
+      "title": "Simple. Sûr. Transparent.",
+      "subtitle": "Domivo a été pensé pour que chaque mission soit une bonne expérience — pour vous, et pour le pro.",
+      "trust": {
+        "verified": { "title": "Pros vérifiés", "desc": "Pièces d'identité, patente, assurance et avis contrôlés." },
+        "escrow": { "title": "Paiement séquestre", "desc": "Votre argent n'est libéré qu'après validation de la mission." },
+        "chat": { "title": "Messagerie intégrée", "desc": "Échangez photos et instructions sans partager votre numéro." },
+        "reviews": { "title": "Avis transparents", "desc": "Chaque mission est notée sur la qualité, la ponctualité et le prix." }
+      }
+    },
+    "becomePro": {
+      "eyebrow": "Prestataires",
+      "title": "Faites grandir votre activité.",
+      "subtitle": "Rejoignez +2 400 pros qui utilisent Domivo pour trouver de nouveaux clients et gérer leur activité au quotidien.",
+      "checkFree": "Inscription gratuite",
+      "checkNoCommit": "Sans engagement",
+      "checkCommission": "Commission claire (10%)",
+      "formTitle": "Créer mon compte pro",
+      "formSubtitle": "Quelques infos et nous vous recontactons sous 24h.",
+      "fNomCommercial": "Nom commercial",
+      "fCategory": "Catégorie",
+      "fPhone": "Téléphone",
+      "fEmail": "Email",
+      "fCity": "Ville",
+      "fZone": "Zone d'intervention",
+      "submit": "Envoyer ma candidature",
+      "terms": "En continuant vous acceptez nos Conditions et notre Politique de confidentialité.",
+      "perkMissions": { "title": "Missions qualifiées", "desc": "Recevez uniquement des demandes correspondant à vos compétences et zones." },
+      "perkAgenda": { "title": "Agenda intelligent", "desc": "Bloquez vos disponibilités, évitez les doublons, planifiez sereinement." },
+      "perkPayments": { "title": "Paiements rapides", "desc": "Versement sous 48h après validation de la mission." }
+    },
+    "cgu": {
+      "title": "Conditions Générales d'Utilisation",
+      "updated": "Dernière mise à jour : juin 2026",
+      "s1Title": "1. Objet",
+      "s1Body": "Les présentes CGU régissent l'utilisation de la plateforme Domivo, qui met en relation des clients et des prestataires de services à domicile.",
+      "s2Title": "2. Comptes",
+      "s2Body": "L'inscription requiert des informations exactes. Les prestataires doivent fournir les documents légaux exigés ; leur compte n'est actif qu'après validation par l'équipe Domivo.",
+      "s3Title": "3. Paiement et séquestre",
+      "s3Body": "Les paiements sont bloqués en séquestre jusqu'à la validation de la prestation par le client, conformément au fonctionnement décrit dans l'application.",
+      "s4Title": "4. Responsabilités",
+      "s4Body": "Domivo agit comme intermédiaire. La qualité de la prestation relève du prestataire ; le respect des conditions de mission relève du client.",
+      "demo": "Document de démonstration — à compléter par le service juridique."
+    },
+    "privacy": {
+      "title": "Politique de confidentialité",
+      "updated": "Conforme au RGPD — Dernière mise à jour : juin 2026",
+      "s1Title": "1. Données collectées",
+      "s1Body": "Nous collectons les données fournies à l'inscription (nom, email, téléphone, adresse) et, pour les prestataires, les documents légaux nécessaires à la vérification.",
+      "s2Title": "2. Finalités",
+      "s2Body": "Ces données servent à la mise en relation, au traitement des paiements, à la sécurité du compte et au respect de nos obligations légales.",
+      "s3Title": "3. Consentement et cookies",
+      "s3Body": "Votre consentement est recueilli à l'inscription (acceptation des CGU) et via le bandeau cookies. Vous pouvez modifier vos choix à tout moment.",
+      "s4Title": "4. Vos droits",
+      "s4Body": "Vous disposez d'un droit d'accès, de rectification et de suppression de vos données. La suppression de compte est disponible dans votre profil.",
+      "demo": "Document de démonstration — à compléter par le service juridique."
+    },
+    "servicesList": {
+      "title": "Tous nos services",
+      "subtitle": "Parcourez les catégories, choisissez un service, comparez les prestataires.",
+      "loadingCatalog": "Chargement du catalogue…",
+      "emptyCatalog": "Le catalogue est vide pour le moment.",
+      "seeServices": "Voir les services",
+      "subcatCount": "{count} sous-catégorie(s)",
+      "backToCategories": "Retour aux catégories",
+      "backToServices": "Retour aux services",
+      "noServiceInCat": "Aucun service dans cette catégorie.",
+      "from": "dès",
+      "certifiedOnly": "Certifié uniquement",
+      "minRating": "Note min",
+      "maxPrice": "Prix max",
+      "language": "Langue",
+      "languagePlaceholder": "Français…",
+      "sort": "Tri",
+      "sortBest": "Mieux notés",
+      "sortCheapest": "Moins chers",
+      "sortClosest": "Plus proches",
+      "sortFastest": "Plus rapides",
+      "resultsCount": "{count} résultat(s)",
+      "locating": "Localisation…",
+      "nearMe": "Près de moi",
+      "aroundMe": "Autour de ma position",
+      "radius": "Rayon",
+      "disable": "Désactiver",
+      "searching": "Recherche en cours…",
+      "noResults": "Aucun prestataire validé ne propose ce service pour ces critères.",
+      "errCatalog": "Impossible de charger le catalogue.",
+      "errServices": "Impossible de charger les services.",
+      "errSearch": "Échec de la recherche.",
+      "geoUnavailable": "La géolocalisation n'est pas disponible sur ce navigateur.",
+      "geoDenied": "Position non autorisée — centre de Tunis utilisé."
+    },
+    "serviceDetail": {
+      "notFoundTitle": "Service introuvable",
+      "notFoundText": "Cette catégorie n'existe pas ou plus.",
+      "seeAll": "Voir tous les services",
+      "backAll": "← Tous les services",
+      "reviewsBadge": "4,9 (1 240 avis)",
+      "durationAvg": "en moyenne",
+      "prosVerified": "Pros vérifiés",
+      "prosTitle": "Pros disponibles près de chez vous",
+      "loadingPros": "Chargement des prestataires…",
+      "errPros": "Impossible de charger les prestataires.",
+      "noPros": "Aucun prestataire validé pour cette catégorie pour le moment.",
+      "from": "dès",
+      "arriveIn": "arrive en ~{min} min",
+      "reserve": "Réserver",
+      "priceFromLabel": "À partir de",
+      "perIntervention": "par intervention",
+      "bulletQuote": "Devis transparent",
+      "bulletEscrow": "Paiement séquestre",
+      "bulletGuarantee": "Garantie satisfaction",
+      "bulletCancel": "Annulation gratuite",
+      "requestQuote": "Demander un devis",
+      "reserveNow": "Réserver maintenant"
+    }
+  },
+  "dash": {
+    "space": "Espace",
+    "logout": "Déconnexion",
+    "roles": { "Client": "Client", "Prestataire": "Prestataire", "Admin": "Admin" },
+    "titles": {
+      "client": "Espace Client",
+      "pro": "Espace Prestataire",
+      "admin": "Back-office Admin"
+    },
+    "nav": {
+      "clientOverview": "Vue d'ensemble",
+      "clientReservations": "Mes réservations",
+      "clientInvoices": "Factures",
+      "clientFavorites": "Favoris",
+      "clientProfile": "Profil",
+      "proDashboard": "Tableau de bord",
+      "proMissions": "Missions",
+      "proAgenda": "Agenda",
+      "proQuotes": "Devis",
+      "proReviews": "Avis clients",
+      "proProfile": "Profil pro",
+      "adminOverview": "Vue d'ensemble",
+      "adminUsers": "Utilisateurs",
+      "adminProviders": "Prestataires",
+      "adminFinances": "Finances",
+      "adminContents": "Contenus",
+      "adminReports": "Signalements"
+    },
+    "verifyBanner": {
+      "title": "Votre compte ne peut pas être vérifié",
+      "text": "Il manque des documents légaux pour valider votre profil. Déposez vos pièces (CIN, patente, assurance…) pour que notre équipe puisse vérifier votre compte.",
+      "cta": "Ajouter mes documents"
+    }
+  },
+  "status": {
+    "confirmed": "Confirmé",
+    "pending": "En attente",
+    "completed": "Terminé",
+    "cancelled": "Annulé",
+    "paid": "Payée",
+    "refunded": "Remboursée"
+  },
+  "client": {
+    "home": {
+      "statActive": "Réservations actives",
+      "statActiveHint": "2 confirmées · 1 en attente",
+      "statSpent": "Dépensé ce mois",
+      "statSpentHint": "+12% vs mois précédent",
+      "statFavorites": "Prestataires favoris",
+      "statReviews": "Avis donnés",
+      "statReviewsHint": "Note moy. donnée : 4.8/5",
+      "nextBookings": "Prochaines réservations",
+      "seeAll": "Tout voir",
+      "suggestions": "Suggestions pour vous",
+      "book": "Réserver"
+    },
+    "reservations": {
+      "title": "Toutes mes réservations",
+      "new": "Nouvelle réservation",
+      "ref": "Réf.",
+      "service": "Service",
+      "provider": "Prestataire",
+      "date": "Date",
+      "statusCol": "Statut",
+      "amount": "Montant",
+      "details": "Détails"
+    },
+    "invoices": {
+      "statTotal": "Total 2026",
+      "statMonth": "Ce mois",
+      "statPayment": "Mode de paiement",
+      "statPaymentHint": "Visa par défaut",
+      "history": "Historique des factures"
+    },
+    "favorites": {
+      "missions": "missions",
+      "book": "Réserver",
+      "message": "Message"
+    },
+    "profile": {
+      "personalInfo": "Informations personnelles",
+      "firstName": "Prénom",
+      "firstNamePlaceholder": "Votre prénom",
+      "lastName": "Nom",
+      "lastNamePlaceholder": "Votre nom",
+      "email": "Email",
+      "phone": "Téléphone",
+      "address": "Adresse",
+      "addressSoon": "(bientôt disponible)",
+      "addressPlaceholder": "12 rue des Orangers, Casablanca",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saveSuccess": "Profil mis à jour avec succès.",
+      "saveErr401": "Session expirée — reconnectez-vous.",
+      "saveErrGeneric": "Erreur lors de la sauvegarde. Réessayez.",
+      "security": "Sécurité",
+      "oauthNote": "Votre compte est lié à un fournisseur (Google/Facebook). Vous pouvez définir un mot de passe local ci-dessous (le champ « actuel » n'est pas requis).",
+      "currentPassword": "Mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "newPasswordPlaceholder": "Minimum 8 caractères",
+      "confirm": "Confirmer",
+      "confirmPlaceholder": "Retapez le mot de passe",
+      "updatePassword": "Mettre à jour le mot de passe",
+      "updating": "Mise à jour…",
+      "pwdTooShort": "Le nouveau mot de passe doit faire au moins 8 caractères.",
+      "pwdMismatch": "Les mots de passe ne correspondent pas.",
+      "pwdSuccess": "Mot de passe mis à jour. Vos autres appareils ont été déconnectés.",
+      "pwdWrong": "Mot de passe actuel incorrect.",
+      "pwdErrGeneric": "Erreur lors du changement.",
+      "twofa": "Double authentification (2FA)",
+      "twofaDesc": "À chaque connexion, un code à 6 chiffres vous sera demandé.",
+      "twofaOn": "Double authentification activée.",
+      "twofaOff": "Double authentification désactivée.",
+      "twofaErrAuth": "Reconnectez-vous pour modifier ce paramètre.",
+      "twofaErrGeneric": "Erreur lors de la modification. Réessayez.",
+      "prefsTitle": "Préférences notifications",
+      "prefEmails": "Emails de confirmation",
+      "prefSms": "SMS de rappel",
+      "prefPromo": "Notifications promo",
+      "prefNewsletter": "Newsletter mensuelle"
+    }
+  },
+  "account": {
+    "danger": {
+      "title": "Zone de danger",
+      "desc": "La suppression de votre compte est définitive. Vos données personnelles seront anonymisées et vous serez déconnecté de tous vos appareils.",
+      "deleteBtn": "Supprimer mon compte",
+      "confirmTitle": "Confirmez la suppression définitive.",
+      "passwordLabel": "Mot de passe",
+      "passwordHint": "(si compte avec mot de passe)",
+      "deleteFinal": "Supprimer définitivement",
+      "deleting": "Suppression…",
+      "cancel": "Annuler",
+      "pwdWrong": "Mot de passe incorrect.",
+      "errGeneric": "Échec de la suppression."
+    },
+    "sessions": {
+      "title": "Appareils connectés",
+      "loading": "Chargement…",
+      "thisDevice": "Cet appareil",
+      "sessionCount": "{count} sessions",
+      "ipSeen": "IP {ip} · vu le {date}",
+      "unknownDevice": "Appareil inconnu",
+      "disconnect": "Déconnecter",
+      "disconnectOthers": "Déconnecter tous les autres appareils",
+      "errLoad": "Impossible de charger les sessions.",
+      "errLogout": "Échec de la déconnexion.",
+      "logoutOk": "Tous les autres appareils ont été déconnectés.",
+      "errGeneric": "Échec de l'opération."
+    }
+  }
+}

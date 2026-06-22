@@ -29,12 +29,10 @@ function goToProfile() {
       </span>
       <div>
         <p class="font-semibold text-amber-900">
-          Votre compte ne peut pas être vérifié
+          {{ $t("dash.verifyBanner.title") }}
         </p>
         <p class="text-sm text-amber-800">
-          Il manque des documents légaux pour valider votre profil. Déposez vos
-          pièces (CIN, patente, assurance…) pour que notre équipe puisse vérifier
-          votre compte.
+          {{ $t("dash.verifyBanner.text") }}
         </p>
       </div>
     </div>
@@ -42,7 +40,7 @@ function goToProfile() {
       class="shrink-0 gap-2 bg-amber-500 text-white hover:bg-amber-600"
       @click="goToProfile"
     >
-      Ajouter mes documents
+      {{ $t("dash.verifyBanner.cta") }}
       <ArrowRight class="h-4 w-4" />
     </Button>
   </div>

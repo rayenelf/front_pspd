@@ -9,7 +9,9 @@ import Button from "@/components/ui/Button.vue";
 import Input from "@/components/ui/Input.vue";
 import Label from "@/components/ui/Label.vue";
 import Checkbox from "@/components/ui/Checkbox.vue";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const remember = ref(false);
 const email = ref("");
 const password = ref("");
@@ -51,7 +53,7 @@ async function submitLogin() {
   needsVerification.value = false;
   resentOk.value = false;
   if (!email.value || !password.value) {
-    errorMessage.value = "Email et mot de passe requis.";
+    errorMessage.value = t("auth.login.credentialsRequired");
     return;
   }
 
@@ -69,16 +71,15 @@ async function submitLogin() {
       auth.setSession(resp.accessToken, resp.refreshToken);
       await router.push(auth.homeRoute);
     } else {
-      errorMessage.value = "Réponse de connexion invalide (tokens manquants).";
+      errorMessage.value = t("auth.login.invalidResponse");
     }
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Erreur de connexion.";
+    const msg = e instanceof Error ? e.message : t("auth.login.genericError");
     if (msg === "EMAIL_NOT_VERIFIED") {
       needsVerification.value = true;
-      errorMessage.value = "Votre email n'est pas encore vérifié.";
+      errorMessage.value = t("auth.login.notVerified");
     } else if (msg === "ACCOUNT_SUSPENDED") {
-      errorMessage.value =
-        "Votre compte est suspendu. Contactez le support pour plus d'informations.";
+      errorMessage.value = t("auth.login.suspended");
     } else {
       errorMessage.value = msg;
     }
@@ -90,43 +91,43 @@ async function submitLogin() {
 
 <template>
   <AuthLayout
-    title="Bon retour 👋"
-    subtitle="Connectez-vous pour gérer vos réservations et prestations."
+    :title="$t('auth.login.title')"
+    :subtitle="$t('auth.login.subtitle')"
   >
     <form class="space-y-4" @submit.prevent="submitLogin">
       <div class="space-y-2">
-        <Label for="email">Email</Label>
-        <Input id="email" type="email" v-model="email" placeholder="vous@exemple.ma" />
+        <Label for="email">{{ $t("auth.emailLabel") }}</Label>
+        <Input id="email" type="email" v-model="email" :placeholder="$t('auth.emailPlaceholder')" />
       </div>
       <div class="space-y-2">
         <div class="flex items-center justify-between">
-          <Label for="password">Mot de passe</Label>
-          <RouterLink to="/auth/forgot-password" class="text-xs text-primary hover:underline">Oublié ?</RouterLink>
+          <Label for="password">{{ $t("auth.passwordLabel") }}</Label>
+          <RouterLink to="/auth/forgot-password" class="text-xs text-primary hover:underline">{{ $t("auth.login.forgot") }}</RouterLink>
         </div>
         <Input id="password" type="password" v-model="password" placeholder="••••••••" />
       </div>
       <label class="flex items-center gap-2 text-sm text-muted-foreground">
-        <Checkbox v-model="remember" /> Se souvenir de moi
+        <Checkbox v-model="remember" /> {{ $t("auth.login.remember") }}
       </label>
       <Button type="submit" class="w-full bg-gradient-warm text-primary-foreground shadow-glow" :disabled="isSubmitting">
-        {{ isSubmitting ? "Connexion…" : "Se connecter" }}
+        {{ isSubmitting ? $t("auth.login.submitting") : $t("auth.login.submit") }}
       </Button>
       <p v-if="errorMessage" class="text-sm text-destructive">{{ errorMessage }}</p>
 
       <!-- Email non vérifié → renvoi du lien -->
       <div v-if="needsVerification" class="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">
         <p v-if="!resentOk">
-          Vérifiez votre boîte mail, ou
+          {{ $t("auth.login.checkInbox") }}
           <button type="button" class="font-semibold underline" :disabled="resending" @click="resendVerification">
-            {{ resending ? "envoi…" : "renvoyer le lien" }}
+            {{ resending ? $t("auth.login.resending") : $t("auth.login.resend") }}
           </button>.
         </p>
-        <p v-else>📧 Lien de vérification renvoyé — consultez votre boîte mail.</p>
+        <p v-else>{{ $t("auth.login.resentOk") }}</p>
       </div>
 
       <div class="relative py-2 text-center text-xs uppercase text-muted-foreground">
         <span class="absolute inset-0 top-1/2 -z-10 h-px bg-border" />
-        <span class="bg-background px-3">ou continuer avec</span>
+        <span class="bg-background px-3">{{ $t("auth.orContinue") }}</span>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <Button variant="outline" type="button" @click="loginWithGoogle" class="gap-2">
@@ -147,7 +148,7 @@ async function submitLogin() {
       </div>
     </form>
     <template #footer>
-      Pas encore de compte ? <RouterLink to="/auth/signup" class="font-semibold text-primary hover:underline">Créer un compte</RouterLink>
+      {{ $t("auth.login.noAccount") }} <RouterLink to="/auth/signup" class="font-semibold text-primary hover:underline">{{ $t("auth.login.createAccount") }}</RouterLink>
     </template>
   </AuthLayout>
 </template>

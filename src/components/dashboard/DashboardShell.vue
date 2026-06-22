@@ -34,7 +34,7 @@ async function logout() {
 
 <template>
   <div class="flex min-h-screen bg-muted/30">
-    <aside class="hidden w-64 shrink-0 flex-col border-r border-border bg-background lg:flex">
+    <aside class="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-background lg:flex">
       <div class="flex h-16 items-center gap-2 border-b border-border px-5 font-display text-lg font-bold">
         <span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-warm text-primary-foreground shadow-glow">
           <MapPin class="h-4 w-4" />
@@ -42,10 +42,10 @@ async function logout() {
         Domivo
       </div>
       <div class="px-5 py-4">
-        <p class="text-xs uppercase tracking-wider text-muted-foreground">Espace</p>
-        <p class="font-display text-base font-semibold">{{ role }}</p>
+        <p class="text-xs uppercase tracking-wider text-muted-foreground">{{ $t("dash.space") }}</p>
+        <p class="font-display text-base font-semibold">{{ $t(`dash.roles.${role}`) }}</p>
       </div>
-      <nav class="flex-1 space-y-1 px-3">
+      <nav class="flex-1 space-y-1 overflow-y-auto px-3">
         <RouterLink
           v-for="it in items"
           :key="it.to"
@@ -56,19 +56,19 @@ async function logout() {
           )"
         >
           <component :is="it.icon" class="h-4 w-4" />
-          {{ it.label }}
+          {{ $t(it.labelKey) }}
         </RouterLink>
       </nav>
       <div class="border-t border-border p-3">
         <Button variant="ghost" size="sm" class="w-full justify-start gap-2" @click="logout">
-          <LogOut class="h-4 w-4" /> Déconnexion
+          <LogOut class="h-4 w-4" /> {{ $t("dash.logout") }}
         </Button>
       </div>
     </aside>
     <div class="flex flex-1 flex-col">
       <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur sm:px-8">
         <div>
-          <p class="text-xs text-muted-foreground">{{ role }}</p>
+          <p class="text-xs text-muted-foreground">{{ $t(`dash.roles.${role}`) }}</p>
           <h1 class="font-display text-lg font-bold">{{ title }}</h1>
         </div>
         <div class="flex items-center gap-3">
@@ -91,7 +91,7 @@ async function logout() {
             pathname === it.to ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-muted'
           )"
         >
-          {{ it.label }}
+          {{ $t(it.labelKey) }}
         </RouterLink>
       </nav>
       <main class="flex-1 px-4 py-6 sm:px-8 sm:py-8"><slot /></main>

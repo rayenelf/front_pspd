@@ -214,6 +214,18 @@ const twoFaActive  = ref(false);
 const twoFaSaving  = ref(false);
 const twoFaMessage = ref<{ type: "success" | "error"; text: string } | null>(null);
 
+// Synchronise l'état réel depuis le backend : sans ça le toggle restait
+// toujours sur OFF alors que le 2FA pouvait être actif en base (l'utilisateur
+// recevait donc un OTP à chaque connexion tout en voyant « désactivé »).
+onMounted(async () => {
+  try {
+    const me = await api.getMe();
+    twoFaActive.value = me.doubleAuthActive;
+  } catch {
+    /* silencieux : on garde l'état par défaut */
+  }
+});
+
 async function toggle2fa(active: boolean) {
   twoFaSaving.value  = true;
   twoFaMessage.value = null;

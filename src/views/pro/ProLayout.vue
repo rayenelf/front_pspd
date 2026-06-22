@@ -9,12 +9,12 @@ import { api } from "@/lib/api";
 
 // Tous les onglets de l'espace prestataire.
 const allItems: NavItem[] = [
-  { to: "/pro", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/pro/missions", label: "Missions", icon: Briefcase },
-  { to: "/pro/agenda", label: "Agenda", icon: Calendar },
-  { to: "/pro/devis", label: "Devis", icon: FileText },
-  { to: "/pro/avis", label: "Avis clients", icon: Star },
-  { to: "/pro/profil", label: "Profil pro", icon: User },
+  { to: "/pro", labelKey: "dash.nav.proDashboard", icon: LayoutDashboard },
+  { to: "/pro/missions", labelKey: "dash.nav.proMissions", icon: Briefcase },
+  { to: "/pro/agenda", labelKey: "dash.nav.proAgenda", icon: Calendar },
+  { to: "/pro/devis", labelKey: "dash.nav.proQuotes", icon: FileText },
+  { to: "/pro/avis", labelKey: "dash.nav.proReviews", icon: Star },
+  { to: "/pro/profil", labelKey: "dash.nav.proProfile", icon: User },
 ];
 
 // Tant que le compte n'est pas validé, on limite l'accès aux fonctions « pro » :
@@ -41,7 +41,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <DashboardShell title="Espace Prestataire" role="Prestataire" :items="items">
+  <DashboardShell :title="$t('dash.titles.pro')" role="Prestataire" :items="items">
     <VerificationBanner :visible="needsDocuments" />
     <RouterView />
   </DashboardShell>

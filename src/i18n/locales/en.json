@@ -1,0 +1,545 @@
+{
+  "common": {
+    "login": "Log in",
+    "signup": "Sign up",
+    "logout": "Log out",
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "learnMore": "Learn more"
+  },
+  "nav": {
+    "services": "Services",
+    "howItWorks": "How it works",
+    "becomePro": "Become a provider",
+    "menu": "Menu"
+  },
+  "lang": {
+    "label": "Language",
+    "fr": "French",
+    "en": "English"
+  },
+  "home": {
+    "hero": {
+      "badge": "+2,400 verified pros near you",
+      "title1": "A pro at home,",
+      "title2": "in just a few clicks.",
+      "subtitle": "Cleaning, plumbing, electrical work, gardening… Book the right provider, at the right price, near you.",
+      "servicePlaceholder": "Which service?",
+      "cityPlaceholder": "Your city",
+      "search": "Search",
+      "clients": "happy clients",
+      "ratingAvg": "on average",
+      "proName": "Karim · Certified plumber",
+      "proEta": "Arrives in 25 min · 4.9 ★",
+      "proStatus": "On the way",
+      "escrowLabel": "Escrow payment",
+      "escrowValue": "100% secure"
+    },
+    "stats": {
+      "clientsServed": "Clients served",
+      "prosVerified": "Verified pros",
+      "avgRating": "Average rating",
+      "responseTime": "Response time"
+    },
+    "categories": {
+      "eyebrow": "Categories",
+      "title": "Everything your home needs",
+      "seeAll": "See all services",
+      "from": "from"
+    },
+    "how": {
+      "eyebrow": "How it works",
+      "title": "Three steps. Zero stress.",
+      "step": "Step",
+      "steps": {
+        "choose": {
+          "title": "Choose your service",
+          "desc": "Describe your need and your address. The right pro finds you in seconds."
+        },
+        "book": {
+          "title": "Book or request a quote",
+          "desc": "Instant slot or custom quote. You confirm, the pro accepts."
+        },
+        "enjoy": {
+          "title": "Enjoy & pay securely",
+          "desc": "Payment is released only once the job is validated. No bad surprises."
+        }
+      }
+    },
+    "testimonials": {
+      "eyebrow": "Testimonials",
+      "title": "They swear by Domivo",
+      "items": {
+        "t1": { "text": "I booked a plumber at 9 PM, he was there by 9:25. Clear quote, flawless work." },
+        "t2": { "text": "The weekly cleaning changed my life. Always the same team, really friendly." },
+        "t3": { "text": "Tutoring for my daughter — visible results in 2 months. Well done Domivo." }
+      }
+    },
+    "proCta": {
+      "eyebrow": "Providers",
+      "title": "Grow your business with Domivo",
+      "subtitle": "Join the network of top-rated pros and grow your client base.",
+      "bullets": {
+        "missions": "Receive jobs near you",
+        "agenda": "Manage your schedule and quotes",
+        "payment": "Get paid within 48h"
+      }
+    }
+  },
+  "footer": {
+    "tagline": "The platform connecting individuals and pros for all home services.",
+    "cols": {
+      "services": "Services",
+      "company": "Company",
+      "help": "Help"
+    },
+    "company": {
+      "about": "About",
+      "careers": "Careers",
+      "press": "Press",
+      "blog": "Blog"
+    },
+    "help": {
+      "center": "Help center",
+      "contact": "Contact",
+      "terms": "Terms",
+      "privacy": "Privacy"
+    },
+    "rights": "© {year} Domivo. All rights reserved.",
+    "crafted": "Crafted with care in the Mediterranean."
+  },
+  "cookies": {
+    "text": "We use cookies to improve your experience and measure traffic. Learn more in our",
+    "policy": "privacy policy",
+    "refuse": "Decline",
+    "accept": "Accept"
+  },
+  "services": {
+    "menage": { "name": "Cleaning", "tagline": "Clean home, light mind" },
+    "bricolage": { "name": "Handywork", "tagline": "Small hands, big results" },
+    "plomberie": { "name": "Plumbing", "tagline": "A leak? Fixed." },
+    "electricite": { "name": "Electrical", "tagline": "Safely done" },
+    "jardinage": { "name": "Gardening", "tagline": "An outdoor that breathes" },
+    "climatisation": { "name": "Air conditioning", "tagline": "Comfort all year round" },
+    "electromenager": { "name": "Appliances", "tagline": "Fast repairs" },
+    "demenagement": { "name": "Moving", "tagline": "We carry, we roll" },
+    "peinture": { "name": "Painting", "tagline": "Walls like new" },
+    "soutien-scolaire": { "name": "Tutoring", "tagline": "Succeed, together" },
+    "garde-enfants": { "name": "Childcare", "tagline": "People you can trust" },
+    "informatique": { "name": "IT support", "tagline": "On-site troubleshooting" },
+    "livraison": { "name": "Delivery", "tagline": "Fast and reliable" },
+    "montage-meubles": { "name": "Furniture assembly", "tagline": "No more broken manuals" }
+  },
+  "auth": {
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "emailPlaceholder": "you{'@'}example.com",
+    "orContinue": "or continue with",
+    "backToLogin": "Back to login",
+    "brand": {
+      "line1": "Every home service.",
+      "line2": "Booked with confidence.",
+      "subtitle": "Over 3,200 verified providers, secure escrow payment, satisfaction guarantee.",
+      "statRating": "Average rating",
+      "statSupport": "Support",
+      "statBookings": "Bookings"
+    },
+    "login": {
+      "title": "Welcome back 👋",
+      "subtitle": "Log in to manage your bookings and services.",
+      "forgot": "Forgot?",
+      "remember": "Remember me",
+      "submit": "Log in",
+      "submitting": "Logging in…",
+      "noAccount": "No account yet?",
+      "createAccount": "Create an account",
+      "credentialsRequired": "Email and password are required.",
+      "invalidResponse": "Invalid login response (missing tokens).",
+      "genericError": "Login error.",
+      "notVerified": "Your email isn't verified yet.",
+      "suspended": "Your account is suspended. Contact support for more information.",
+      "checkInbox": "Check your inbox, or",
+      "resend": "resend the link",
+      "resending": "sending…",
+      "resentOk": "📧 Verification link resent — check your inbox."
+    },
+    "signup": {
+      "title": "Create your account",
+      "subtitle": "Join Domivo in under a minute.",
+      "roleClient": "I'm looking for a service",
+      "rolePro": "I'm a provider",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "address": "Address",
+      "addressPlaceholder": "12 Liberty St, Tunis",
+      "accountType": "Account type",
+      "particulier": "Individual",
+      "entreprise": "Company",
+      "raisonSociale": "Legal name",
+      "matricule": "Tax ID",
+      "prestaType": "Provider type",
+      "individuel": "Individual (craftsman, technician, freelancer)",
+      "societe": "Provider company (multiple employees)",
+      "nomCommercial": "Business name",
+      "category": "Activity category",
+      "selectCategory": "Select a category…",
+      "zone": "Service area",
+      "zonePlaceholder": "Tunis, Ariana, La Marsa…",
+      "password": "Password",
+      "passwordMin": "At least 8 characters",
+      "confirmPassword": "Confirm password",
+      "confirmPlaceholder": "Re-type the password",
+      "acceptPrefix": "I accept the",
+      "cgu": "terms of service",
+      "and": "and the",
+      "privacy": "privacy policy",
+      "rgpdSuffix": "(GDPR).",
+      "submitClient": "Create my account",
+      "submitPro": "Become a provider",
+      "submitting": "Creating…",
+      "googleClient": "Sign up as a client with Google",
+      "googlePro": "Sign up as a provider with Google",
+      "facebook": "Continue with Facebook",
+      "already": "Already registered?",
+      "login": "Log in",
+      "errAddress": "Address is required.",
+      "errPwLen": "Password must be at least 8 characters.",
+      "errPwMatch": "Passwords do not match.",
+      "errNomCommercial": "Business name is required.",
+      "errCategory": "Activity category is required.",
+      "errZone": "Service area is required.",
+      "errCgu": "You must accept the terms and privacy policy.",
+      "success": "Account created. Check your messages to continue validation.",
+      "genericError": "An error occurred."
+    },
+    "forgot": {
+      "title": "Forgot your password?",
+      "subtitle": "Enter your email to receive a reset link.",
+      "sentPrefix": "If an account exists for",
+      "sentSuffix": "a reset link has just been sent. Check your inbox (and spam).",
+      "submit": "Send the link",
+      "submitting": "Sending…"
+    },
+    "reset": {
+      "title": "New password",
+      "subtitle": "Choose a new password for your account.",
+      "doneTitle": "Password reset!",
+      "doneText": "You can now log in with your new password.",
+      "newPassword": "New password",
+      "passwordMin": "At least 8 characters",
+      "tooShort": "At least 8 characters.",
+      "confirm": "Confirm password",
+      "confirmPlaceholder": "Re-type the password",
+      "mismatch": "Passwords do not match.",
+      "submit": "Reset my password",
+      "submitting": "Resetting…",
+      "login": "Log in",
+      "invalidLink": "Invalid or expired link.",
+      "tokenMissing": "Invalid reset link (missing token)."
+    },
+    "twofa": {
+      "title": "Two-step verification",
+      "subtitle": "A 6-digit code has been sent to your address.",
+      "codeSentTo": "Code sent to",
+      "rememberDevice": "Remember this device (30 days)",
+      "verify": "Verify code",
+      "verifying": "Verifying…",
+      "resend": "Resend a new code",
+      "resendInPrefix": "Resend in",
+      "tooManyAttempts": "Too many incorrect attempts. Request a new code.",
+      "wrongCode": "Incorrect code. Try again.",
+      "sendFail": "Couldn't send the code. Try again."
+    },
+    "verifyEmail": {
+      "title": "Email verification",
+      "subtitle": "Activating your Domivo account.",
+      "verifying": "Verifying…",
+      "successTitle": "Your email is confirmed!",
+      "successText": "You can now log in.",
+      "login": "Log in",
+      "invalidToken": "Invalid verification link (missing token).",
+      "fail": "Verification failed."
+    },
+    "oauth": {
+      "connecting": "Connecting…",
+      "googleFailed": "Google login failed: missing tokens."
+    }
+  },
+  "pages": {
+    "notFound": {
+      "title": "Page not found",
+      "text": "The page you're looking for doesn't exist or has been moved.",
+      "home": "Go home"
+    },
+    "how": {
+      "eyebrow": "How we work",
+      "title": "Simple. Safe. Transparent.",
+      "subtitle": "Domivo is designed so every job is a great experience — for you, and for the pro.",
+      "trust": {
+        "verified": { "title": "Verified pros", "desc": "ID documents, license, insurance and reviews all checked." },
+        "escrow": { "title": "Escrow payment", "desc": "Your money is released only after the job is validated." },
+        "chat": { "title": "Built-in messaging", "desc": "Share photos and instructions without sharing your number." },
+        "reviews": { "title": "Transparent reviews", "desc": "Every job is rated on quality, punctuality and price." }
+      }
+    },
+    "becomePro": {
+      "eyebrow": "Providers",
+      "title": "Grow your business.",
+      "subtitle": "Join 2,400+ pros who use Domivo to find new clients and run their business day to day.",
+      "checkFree": "Free registration",
+      "checkNoCommit": "No commitment",
+      "checkCommission": "Clear commission (10%)",
+      "formTitle": "Create my pro account",
+      "formSubtitle": "A few details and we'll get back to you within 24h.",
+      "fNomCommercial": "Business name",
+      "fCategory": "Category",
+      "fPhone": "Phone",
+      "fEmail": "Email",
+      "fCity": "City",
+      "fZone": "Service area",
+      "submit": "Send my application",
+      "terms": "By continuing you accept our Terms and Privacy Policy.",
+      "perkMissions": { "title": "Qualified jobs", "desc": "Receive only requests matching your skills and areas." },
+      "perkAgenda": { "title": "Smart calendar", "desc": "Block your availability, avoid clashes, plan with ease." },
+      "perkPayments": { "title": "Fast payments", "desc": "Paid within 48h after the job is validated." }
+    },
+    "cgu": {
+      "title": "Terms of Service",
+      "updated": "Last updated: June 2026",
+      "s1Title": "1. Purpose",
+      "s1Body": "These terms govern the use of the Domivo platform, which connects clients with home-service providers.",
+      "s2Title": "2. Accounts",
+      "s2Body": "Registration requires accurate information. Providers must supply the required legal documents; their account is active only after validation by the Domivo team.",
+      "s3Title": "3. Payment and escrow",
+      "s3Body": "Payments are held in escrow until the client validates the service, as described in the app.",
+      "s4Title": "4. Responsibilities",
+      "s4Body": "Domivo acts as an intermediary. Service quality is the provider's responsibility; compliance with job conditions is the client's.",
+      "demo": "Demo document — to be completed by the legal team."
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "updated": "GDPR-compliant — Last updated: June 2026",
+      "s1Title": "1. Data collected",
+      "s1Body": "We collect the data provided at registration (name, email, phone, address) and, for providers, the legal documents needed for verification.",
+      "s2Title": "2. Purposes",
+      "s2Body": "This data is used for matchmaking, payment processing, account security and meeting our legal obligations.",
+      "s3Title": "3. Consent and cookies",
+      "s3Body": "Your consent is collected at registration (accepting the terms) and via the cookie banner. You can change your choices at any time.",
+      "s4Title": "4. Your rights",
+      "s4Body": "You have the right to access, rectify and delete your data. Account deletion is available in your profile.",
+      "demo": "Demo document — to be completed by the legal team."
+    },
+    "servicesList": {
+      "title": "All our services",
+      "subtitle": "Browse categories, pick a service, compare providers.",
+      "loadingCatalog": "Loading the catalog…",
+      "emptyCatalog": "The catalog is empty for now.",
+      "seeServices": "See services",
+      "subcatCount": "{count} subcategory(ies)",
+      "backToCategories": "Back to categories",
+      "backToServices": "Back to services",
+      "noServiceInCat": "No service in this category.",
+      "from": "from",
+      "certifiedOnly": "Certified only",
+      "minRating": "Min rating",
+      "maxPrice": "Max price",
+      "language": "Language",
+      "languagePlaceholder": "French…",
+      "sort": "Sort",
+      "sortBest": "Top rated",
+      "sortCheapest": "Cheapest",
+      "sortClosest": "Closest",
+      "sortFastest": "Fastest",
+      "resultsCount": "{count} result(s)",
+      "locating": "Locating…",
+      "nearMe": "Near me",
+      "aroundMe": "Around my location",
+      "radius": "Radius",
+      "disable": "Disable",
+      "searching": "Searching…",
+      "noResults": "No validated provider offers this service for these criteria.",
+      "errCatalog": "Couldn't load the catalog.",
+      "errServices": "Couldn't load the services.",
+      "errSearch": "Search failed.",
+      "geoUnavailable": "Geolocation isn't available on this browser.",
+      "geoDenied": "Location not allowed — using Tunis center."
+    },
+    "serviceDetail": {
+      "notFoundTitle": "Service not found",
+      "notFoundText": "This category doesn't exist anymore.",
+      "seeAll": "See all services",
+      "backAll": "← All services",
+      "reviewsBadge": "4.9 (1,240 reviews)",
+      "durationAvg": "on average",
+      "prosVerified": "Verified pros",
+      "prosTitle": "Pros available near you",
+      "loadingPros": "Loading providers…",
+      "errPros": "Couldn't load providers.",
+      "noPros": "No validated provider for this category yet.",
+      "from": "from",
+      "arriveIn": "arrives in ~{min} min",
+      "reserve": "Book",
+      "priceFromLabel": "Starting at",
+      "perIntervention": "per visit",
+      "bulletQuote": "Transparent quote",
+      "bulletEscrow": "Escrow payment",
+      "bulletGuarantee": "Satisfaction guarantee",
+      "bulletCancel": "Free cancellation",
+      "requestQuote": "Request a quote",
+      "reserveNow": "Book now"
+    }
+  },
+  "dash": {
+    "space": "Space",
+    "logout": "Log out",
+    "roles": { "Client": "Client", "Prestataire": "Provider", "Admin": "Admin" },
+    "titles": {
+      "client": "Client area",
+      "pro": "Provider area",
+      "admin": "Admin back-office"
+    },
+    "nav": {
+      "clientOverview": "Overview",
+      "clientReservations": "My bookings",
+      "clientInvoices": "Invoices",
+      "clientFavorites": "Favorites",
+      "clientProfile": "Profile",
+      "proDashboard": "Dashboard",
+      "proMissions": "Jobs",
+      "proAgenda": "Calendar",
+      "proQuotes": "Quotes",
+      "proReviews": "Client reviews",
+      "proProfile": "Pro profile",
+      "adminOverview": "Overview",
+      "adminUsers": "Users",
+      "adminProviders": "Providers",
+      "adminFinances": "Finances",
+      "adminContents": "Content",
+      "adminReports": "Reports"
+    },
+    "verifyBanner": {
+      "title": "Your account can't be verified",
+      "text": "Legal documents are missing to validate your profile. Upload your papers (ID, license, insurance…) so our team can verify your account.",
+      "cta": "Add my documents"
+    }
+  },
+  "status": {
+    "confirmed": "Confirmed",
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "paid": "Paid",
+    "refunded": "Refunded"
+  },
+  "client": {
+    "home": {
+      "statActive": "Active bookings",
+      "statActiveHint": "2 confirmed · 1 pending",
+      "statSpent": "Spent this month",
+      "statSpentHint": "+12% vs last month",
+      "statFavorites": "Favorite providers",
+      "statReviews": "Reviews given",
+      "statReviewsHint": "Avg. rating given: 4.8/5",
+      "nextBookings": "Upcoming bookings",
+      "seeAll": "See all",
+      "suggestions": "Suggestions for you",
+      "book": "Book"
+    },
+    "reservations": {
+      "title": "All my bookings",
+      "new": "New booking",
+      "ref": "Ref.",
+      "service": "Service",
+      "provider": "Provider",
+      "date": "Date",
+      "statusCol": "Status",
+      "amount": "Amount",
+      "details": "Details"
+    },
+    "invoices": {
+      "statTotal": "Total 2026",
+      "statMonth": "This month",
+      "statPayment": "Payment method",
+      "statPaymentHint": "Default Visa",
+      "history": "Invoice history"
+    },
+    "favorites": {
+      "missions": "jobs",
+      "book": "Book",
+      "message": "Message"
+    },
+    "profile": {
+      "personalInfo": "Personal information",
+      "firstName": "First name",
+      "firstNamePlaceholder": "Your first name",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "Your last name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "addressSoon": "(coming soon)",
+      "addressPlaceholder": "12 Orange St, Casablanca",
+      "save": "Save",
+      "saving": "Saving…",
+      "saveSuccess": "Profile updated successfully.",
+      "saveErr401": "Session expired — please log in again.",
+      "saveErrGeneric": "Error while saving. Try again.",
+      "security": "Security",
+      "oauthNote": "Your account is linked to a provider (Google/Facebook). You can set a local password below (the \"current\" field isn't required).",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "confirm": "Confirm",
+      "confirmPlaceholder": "Re-type the password",
+      "updatePassword": "Update password",
+      "updating": "Updating…",
+      "pwdTooShort": "The new password must be at least 8 characters.",
+      "pwdMismatch": "Passwords do not match.",
+      "pwdSuccess": "Password updated. Your other devices have been logged out.",
+      "pwdWrong": "Current password incorrect.",
+      "pwdErrGeneric": "Error while changing password.",
+      "twofa": "Two-factor authentication (2FA)",
+      "twofaDesc": "A 6-digit code will be requested at each login.",
+      "twofaOn": "Two-factor authentication enabled.",
+      "twofaOff": "Two-factor authentication disabled.",
+      "twofaErrAuth": "Log in again to change this setting.",
+      "twofaErrGeneric": "Error while updating. Try again.",
+      "prefsTitle": "Notification preferences",
+      "prefEmails": "Confirmation emails",
+      "prefSms": "Reminder SMS",
+      "prefPromo": "Promo notifications",
+      "prefNewsletter": "Monthly newsletter"
+    }
+  },
+  "account": {
+    "danger": {
+      "title": "Danger zone",
+      "desc": "Deleting your account is permanent. Your personal data will be anonymized and you'll be logged out of all your devices.",
+      "deleteBtn": "Delete my account",
+      "confirmTitle": "Confirm permanent deletion.",
+      "passwordLabel": "Password",
+      "passwordHint": "(if account has a password)",
+      "deleteFinal": "Delete permanently",
+      "deleting": "Deleting…",
+      "cancel": "Cancel",
+      "pwdWrong": "Incorrect password.",
+      "errGeneric": "Deletion failed."
+    },
+    "sessions": {
+      "title": "Connected devices",
+      "loading": "Loading…",
+      "thisDevice": "This device",
+      "sessionCount": "{count} sessions",
+      "ipSeen": "IP {ip} · seen on {date}",
+      "unknownDevice": "Unknown device",
+      "disconnect": "Disconnect",
+      "disconnectOthers": "Log out all other devices",
+      "errLoad": "Couldn't load sessions.",
+      "errLogout": "Disconnect failed.",
+      "logoutOk": "All other devices have been logged out.",
+      "errGeneric": "Operation failed."
+    }
+  }
+}
