@@ -12,6 +12,8 @@ const props = defineProps<{
   title: string;
   role: "Client" | "Prestataire" | "Admin";
   items: NavItem[];
+  /** Avatar optionnel (prestataire) affiché dans le header à la place des initiales. */
+  avatarUrl?: string | null;
 }>();
 
 const route  = useRoute();
@@ -76,8 +78,9 @@ async function logout() {
             <p class="text-sm font-medium">{{ displayName }}</p>
             <p class="text-xs text-muted-foreground">{{ email }}</p>
           </div>
-          <div class="grid h-10 w-10 place-items-center rounded-full bg-gradient-warm font-display text-sm font-bold text-primary-foreground">
-            {{ initials }}
+          <div class="grid h-10 w-10 place-items-center overflow-hidden rounded-full bg-gradient-warm font-display text-sm font-bold text-primary-foreground">
+            <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar" class="h-full w-full object-cover" />
+            <span v-else>{{ initials }}</span>
           </div>
         </div>
       </header>
