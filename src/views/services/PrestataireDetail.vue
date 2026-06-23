@@ -11,11 +11,11 @@ const provider = ref<PublicPrestataire | null>(null);
 const loading  = ref(true);
 const notFound = ref(false);
 
-async function load(id: string) {
+async function load(slug: string) {
   loading.value = true;
   notFound.value = false;
   try {
-    provider.value = await api.getPublicPrestataire(id);
+    provider.value = await api.getPublicPrestataire(slug);
   } catch {
     notFound.value = true;
   } finally {
@@ -23,9 +23,9 @@ async function load(id: string) {
   }
 }
 
-onMounted(() => load(route.params.id as string));
+onMounted(() => load(route.params.slug as string));
 // Recharge si on navigue d'un prestataire à un autre sans démonter la vue.
-watch(() => route.params.id, (id) => { if (id) load(id as string); });
+watch(() => route.params.slug, (slug) => { if (slug) load(slug as string); });
 
 function initials(name: string) {
   return name.slice(0, 2).toUpperCase();

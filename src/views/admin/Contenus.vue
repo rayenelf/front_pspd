@@ -58,7 +58,54 @@ async function selectCategory(id: string) {
   }
 }
 
-onMounted(loadCategories);
+// ── Services proposés par les prestataires (validation) ──────────────────────
+const pendingServices = ref<ServiceData[]>([]);
+const pendingBusy     = ref<string | null>(null);
+
+async function loadPending() {
+  try {
+    pendingServices.value = await api.getPendingServices();
+  } catch (e) {
+    notify("error", (e as ApiError).message || "Échec du chargement des propositions.");
+  }
+}
+
+function catLabelOf(id: string): string {
+  return flatCategories.value.find((c) => c.id === id)?.libelle ?? "Catégorie inconnue";
+}
+
+async function approveProposal(id: string) {
+  pendingBusy.value = id;
+  try {
+    await api.approveService(id);
+    pendingServices.value = pendingServices.value.filter((s) => s.id !== id);
+    if (selectedId.value) await selectCategory(selectedId.value);
+    notify("success", "Service approuvé et publié au catalogue.");
+  } catch (e) {
+    notify("error", (e as ApiError).message || "Échec de l'approbation.");
+  } finally {
+    pendingBusy.value = null;
+  }
+}
+
+async function rejectProposal(id: string) {
+  if (!confirm("Rejeter et supprimer ce service proposé ?")) return;
+  pendingBusy.value = id;
+  try {
+    await api.rejectService(id);
+    pendingServices.value = pendingServices.value.filter((s) => s.id !== id);
+    notify("success", "Proposition rejetée.");
+  } catch (e) {
+    notify("error", (e as ApiError).message || "Échec du rejet.");
+  } finally {
+    pendingBusy.value = null;
+  }
+}
+
+onMounted(() => {
+  loadCategories();
+  loadPending();
+});
 
 // ── Création / édition catégorie ───────────────────────────────────────────────
 const catForm = reactive({ libelle: "", slug: "", parentId: "" });
@@ -193,6 +240,42 @@ async function deleteService(id: string) {
       'rounded-md px-3 py-2 text-sm font-medium',
       feedback.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
     ]">{{ feedback.text }}</p>
+
+    <!-- ── Services proposés par les prestataires ─────────────────────── -->
+    <PanelCard v-if="pendingServices.length" title="Services proposés — à valider">
+      <p class="mb-3 text-sm text-muted-foreground">
+        Des prestataires ont proposé ces nouveaux services. Approuvez-les pour les publier au
+        catalogue, ou rejetez-les.
+      </p>
+      <ul class="space-y-2">
+        <li
+          v-for="s in pendingServices"
+          :key="s.id"
+          class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50/50 p-3"
+        >
+          <div>
+            <p class="text-sm font-medium">{{ s.libelle }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ catLabelOf(s.categorieId) }}<span v-if="s.description"> · {{ s.description }}</span>
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <Button
+              size="sm"
+              class="bg-gradient-warm text-primary-foreground"
+              :disabled="pendingBusy === s.id"
+              @click="approveProposal(s.id)"
+            >Approuver</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              :disabled="pendingBusy === s.id"
+              @click="rejectProposal(s.id)"
+            >Rejeter</Button>
+          </div>
+        </li>
+      </ul>
+    </PanelCard>
 
     <div class="grid gap-6 lg:grid-cols-2">
       <!-- ── Catégories ───────────────────────────────────────────────── -->
