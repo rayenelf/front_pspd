@@ -287,12 +287,30 @@ onMounted(loadCategories);
 
         <p v-if="searching" class="mt-6 text-muted-foreground">{{ $t("pages.servicesList.searching") }}</p>
         <div v-else class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div v-for="r in results" :key="r.prestataireId" class="rounded-2xl border border-border bg-card p-5">
-            <div class="flex items-start justify-between gap-2">
-              <h3 class="font-display text-lg font-semibold">{{ r.nomCommercial }}</h3>
-              <BadgeCheck v-if="r.certifie" class="h-5 w-5 shrink-0 text-primary" />
+          <RouterLink
+            v-for="r in results"
+            :key="r.prestataireId"
+            :to="`/prestataires/${r.prestataireId}`"
+            class="block rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-1 hover:shadow-soft"
+          >
+            <div class="flex items-start gap-3">
+              <div class="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-warm text-sm font-bold text-primary-foreground">
+                <span>{{ r.nomCommercial.slice(0, 2).toUpperCase() }}</span>
+                <img
+                  :src="`/api/prestataires/${r.prestataireId}/avatar`"
+                  alt=""
+                  class="absolute inset-0 h-full w-full object-cover"
+                  @error="(e) => ((e.target as HTMLImageElement).style.display = 'none')"
+                />
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-start justify-between gap-2">
+                  <h3 class="truncate font-display text-lg font-semibold">{{ r.nomCommercial }}</h3>
+                  <BadgeCheck v-if="r.certifie" class="h-5 w-5 shrink-0 text-primary" />
+                </div>
+                <p v-if="r.categoriePrincipale" class="text-sm text-muted-foreground">{{ r.categoriePrincipale }}</p>
+              </div>
             </div>
-            <p v-if="r.categoriePrincipale" class="text-sm text-muted-foreground">{{ r.categoriePrincipale }}</p>
             <div class="mt-3 flex items-center gap-1 text-sm">
               <Star class="h-4 w-4 fill-primary text-primary" /> {{ Number(r.note).toFixed(1) }}
             </div>
@@ -302,7 +320,7 @@ onMounted(loadCategories);
               <span v-if="r.etaMin != null" class="inline-flex items-center gap-1"><Clock class="h-3.5 w-3.5" /> ~{{ r.etaMin }} min</span>
             </div>
             <p v-if="r.prixIndicatif" class="mt-3 text-sm">{{ $t("pages.servicesList.from") }} <b>{{ r.prixIndicatif }} TND</b></p>
-          </div>
+          </RouterLink>
         </div>
         <p v-if="!searching && !results.length" class="mt-6 text-muted-foreground">
           {{ $t("pages.servicesList.noResults") }}

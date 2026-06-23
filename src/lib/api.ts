@@ -121,6 +121,28 @@ export interface PrestataireProfile {
   certifie: boolean;
   noteMoyenne: number;
   nombreDocuments: number;
+  /** URL publique de l'avatar (null si aucune photo de profil). */
+  avatarUrl: string | null;
+}
+
+/** Photo de portfolio (réalisation) du prestataire. */
+export interface PhotoData {
+  id: string;
+  url: string;
+}
+
+/** Profil public d'un prestataire (page détail visible des clients). */
+export interface PublicPrestataire {
+  id: string;
+  nomCommercial: string;
+  categoriePrincipale: string | null;
+  zoneIntervention: string | null;
+  rayonKm: number;
+  langues: string | null;
+  note: number;
+  certifie: boolean;
+  avatarUrl: string | null;
+  portfolio: PhotoData[];
 }
 
 export interface AuthResponse {
@@ -333,6 +355,38 @@ export const api = {
     form.append("file", file);
     return apiFetch("/api/prestataires/me/documents", { method: "POST", body: form });
   },
+
+  // ── Photos prestataire : avatar + portfolio (publiques) ─────────────────────
+
+  /** Définit/remplace la photo de profil — renvoie l'URL publique de l'avatar. */
+  uploadAvatar: (file: File): Promise<{ url: string }> => {
+    const form = new FormData();
+    form.append("file", file);
+    return apiFetch("/api/prestataires/me/avatar", { method: "POST", body: form });
+  },
+
+  /** Supprime la photo de profil. */
+  deleteAvatar: (): Promise<void> =>
+    apiFetch("/api/prestataires/me/avatar", { method: "DELETE" }),
+
+  /** Liste les photos de portfolio du prestataire courant. */
+  getPortfolio: (): Promise<PhotoData[]> =>
+    apiFetch("/api/prestataires/me/portfolio"),
+
+  /** Ajoute une photo au portfolio (max 12) — multipart. */
+  addPortfolioPhoto: (file: File): Promise<PhotoData> => {
+    const form = new FormData();
+    form.append("file", file);
+    return apiFetch("/api/prestataires/me/portfolio", { method: "POST", body: form });
+  },
+
+  /** Supprime une photo du portfolio. */
+  deletePortfolioPhoto: (id: string): Promise<void> =>
+    apiFetch(`/api/prestataires/me/portfolio/${id}`, { method: "DELETE" }),
+
+  /** Profil public d'un prestataire (infos + avatar + portfolio) — public. */
+  getPublicPrestataire: (id: string): Promise<PublicPrestataire> =>
+    apiFetch(`/api/prestataires/${id}/public`),
 
   /** Sessions/appareils de l'utilisateur (#3). */
   getSessions: (): Promise<SessionData[]> =>

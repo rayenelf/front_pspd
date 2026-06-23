@@ -366,6 +366,21 @@
       "geoUnavailable": "Geolocation isn't available on this browser.",
       "geoDenied": "Location not allowed — using Tunis center."
     },
+    "providerDetail": {
+      "loading": "Loading provider…",
+      "notFound": "Provider not found",
+      "notFoundText": "This provider doesn't exist or is no longer available.",
+      "backToServices": "Back to services",
+      "certified": "Certified",
+      "reviewsBadge": "Well rated",
+      "languages": "Languages",
+      "zone": "Service area",
+      "radius": "Radius",
+      "portfolio": "Work gallery",
+      "noPortfolio": "This provider hasn't added any work photos yet.",
+      "requestQuote": "Request a quote",
+      "book": "Book"
+    },
     "serviceDetail": {
       "notFoundTitle": "Service not found",
       "notFoundText": "This category doesn't exist anymore.",

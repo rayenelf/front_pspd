@@ -9,9 +9,10 @@ import Badge from "@/components/ui/Badge.vue";
 import Switch from "@/components/ui/Switch.vue";
 import SessionsPanel from "@/components/account/SessionsPanel.vue";
 import DangerZone from "@/components/account/DangerZone.vue";
+import { Camera, Trash2, ImagePlus, X } from "lucide-vue-next";
 import { getCurrentUser, getInitials, getDisplayName } from "@/lib/auth";
 import { useAuthStore } from "@/stores/auth";
-import { api, type ApiError, type DocumentData, type TypeDocument } from "@/lib/api";
+import { api, type ApiError, type DocumentData, type TypeDocument, type PhotoData } from "@/lib/api";
 
 const auth = useAuthStore();
 
@@ -51,6 +52,7 @@ async function loadProfile() {
     proForm.rayonKm             = p.rayonKm ?? 10;
     proForm.langues             = p.langues ?? "";
     statutValidation.value      = p.statutValidation;
+    avatarUrl.value             = p.avatarUrl;
   } catch {
     /* silencieux : le formulaire reste éditable même si le chargement échoue */
   }
@@ -129,9 +131,83 @@ async function uploadDoc() {
   }
 }
 
+// ── Photos : avatar + portfolio (publiques) ─────────────────────────────────
+const avatarUrl     = ref<string | null>(null);
+const avatarSaving  = ref(false);
+const photos        = ref<PhotoData[]>([]);
+const photoUploading = ref(false);
+const PORTFOLIO_MAX = 12;
+const photoMessage  = ref<{ type: "success" | "error"; text: string } | null>(null);
+
+const avatarInput = ref<HTMLInputElement | null>(null);
+const photoInput  = ref<HTMLInputElement | null>(null);
+
+async function loadPortfolio() {
+  try {
+    photos.value = await api.getPortfolio();
+  } catch {
+    /* silencieux */
+  }
+}
+
+async function onAvatarChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  avatarSaving.value = true;
+  photoMessage.value = null;
+  try {
+    const { url } = await api.uploadAvatar(file);
+    // Cache-buster pour forcer le rafraîchissement de l'image affichée.
+    avatarUrl.value = `${url}?t=${Date.now()}`;
+  } catch (err) {
+    photoMessage.value = { type: "error", text: (err as ApiError).message || "Échec de l'envoi." };
+  } finally {
+    avatarSaving.value = false;
+    if (avatarInput.value) avatarInput.value.value = "";
+  }
+}
+
+async function removeAvatar() {
+  avatarSaving.value = true;
+  try {
+    await api.deleteAvatar();
+    avatarUrl.value = null;
+  } catch (err) {
+    photoMessage.value = { type: "error", text: (err as ApiError).message || "Échec de la suppression." };
+  } finally {
+    avatarSaving.value = false;
+  }
+}
+
+async function onPhotoChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  photoUploading.value = true;
+  photoMessage.value = null;
+  try {
+    const created = await api.addPortfolioPhoto(file);
+    photos.value.push(created);
+  } catch (err) {
+    photoMessage.value = { type: "error", text: (err as ApiError).message || "Échec de l'envoi de la photo." };
+  } finally {
+    photoUploading.value = false;
+    if (photoInput.value) photoInput.value.value = "";
+  }
+}
+
+async function removePhoto(id: string) {
+  try {
+    await api.deletePortfolioPhoto(id);
+    photos.value = photos.value.filter((p) => p.id !== id);
+  } catch (err) {
+    photoMessage.value = { type: "error", text: (err as ApiError).message || "Échec de la suppression." };
+  }
+}
+
 onMounted(() => {
   loadDocuments();
   loadProfile();
+  loadPortfolio();
 });
 
 // ── Feedback ───────────────────────────────────────────────────────────────
@@ -320,6 +396,80 @@ async function toggle2fa(active: boolean) {
         >
           {{ saving ? "Enregistrement…" : "Enregistrer les modifications" }}
         </Button>
+      </PanelCard>
+
+      <!-- Photos (avatar + portfolio public) -->
+      <PanelCard title="Photos & réalisations">
+        <p class="text-sm text-muted-foreground">
+          Votre photo de profil et vos réalisations sont visibles publiquement par les clients.
+          (Indépendant des documents légaux ci-dessous, eux privés.)
+        </p>
+
+        <!-- Avatar -->
+        <div class="mt-5 flex items-center gap-4">
+          <div class="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-warm font-display text-2xl font-bold text-primary-foreground">
+            <img v-if="avatarUrl" :src="avatarUrl" alt="Photo de profil" class="h-full w-full object-cover" />
+            <span v-else>{{ initials }}</span>
+          </div>
+          <div class="space-y-1">
+            <p class="text-sm font-medium">Photo de profil</p>
+            <div class="flex gap-2">
+              <Button variant="outline" size="sm" :disabled="avatarSaving" @click="avatarInput?.click()">
+                <Camera class="mr-1 h-4 w-4" /> {{ avatarUrl ? "Changer" : "Ajouter" }}
+              </Button>
+              <Button v-if="avatarUrl" variant="ghost" size="sm" class="text-red-600 hover:bg-red-50" :disabled="avatarSaving" @click="removeAvatar">
+                <Trash2 class="mr-1 h-4 w-4" /> Supprimer
+              </Button>
+            </div>
+            <input ref="avatarInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="onAvatarChange" />
+          </div>
+        </div>
+
+        <!-- Portfolio -->
+        <div class="mt-6 border-t border-border pt-5">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium">Mes réalisations</p>
+            <span class="text-xs text-muted-foreground">{{ photos.length }}/{{ PORTFOLIO_MAX }}</span>
+          </div>
+
+          <div class="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
+            <div
+              v-for="p in photos"
+              :key="p.id"
+              class="group relative aspect-square overflow-hidden rounded-lg border border-border"
+            >
+              <img :src="p.url" alt="Réalisation" class="h-full w-full object-cover" loading="lazy" />
+              <button
+                type="button"
+                class="absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white opacity-0 transition group-hover:opacity-100"
+                aria-label="Supprimer la photo"
+                @click="removePhoto(p.id)"
+              >
+                <X class="h-4 w-4" />
+              </button>
+            </div>
+
+            <!-- Tuile d'ajout -->
+            <button
+              v-if="photos.length < PORTFOLIO_MAX"
+              type="button"
+              :disabled="photoUploading"
+              class="grid aspect-square place-items-center rounded-lg border-2 border-dashed border-border text-muted-foreground transition hover:border-primary hover:text-primary disabled:opacity-50"
+              @click="photoInput?.click()"
+            >
+              <span class="flex flex-col items-center gap-1 text-xs">
+                <ImagePlus class="h-6 w-6" />
+                {{ photoUploading ? "Envoi…" : "Ajouter" }}
+              </span>
+            </button>
+          </div>
+          <input ref="photoInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="onPhotoChange" />
+        </div>
+
+        <p v-if="photoMessage" :class="[
+          'mt-4 rounded-md px-3 py-2 text-sm font-medium',
+          photoMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+        ]">{{ photoMessage.text }}</p>
       </PanelCard>
 
       <!-- Documents -->

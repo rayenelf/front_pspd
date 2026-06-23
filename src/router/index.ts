@@ -21,6 +21,7 @@ const routes: RouteRecordRaw[] = [
   { path: "/", component: () => import("@/views/Home.vue") },
   { path: "/services", component: () => import("@/views/services/Services.vue") },
   { path: "/services/:slug", component: () => import("@/views/services/ServiceDetail.vue") },
+  { path: "/prestataires/:id", component: () => import("@/views/services/PrestataireDetail.vue") },
   { path: "/comment-ca-marche", component: () => import("@/views/CommentCaMarche.vue") },
   { path: "/cgu", component: () => import("@/views/legal/CGU.vue") },
   { path: "/confidentialite", component: () => import("@/views/legal/Confidentialite.vue") },

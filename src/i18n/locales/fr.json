@@ -366,6 +366,21 @@
       "geoUnavailable": "La géolocalisation n'est pas disponible sur ce navigateur.",
       "geoDenied": "Position non autorisée — centre de Tunis utilisé."
     },
+    "providerDetail": {
+      "loading": "Chargement du prestataire…",
+      "notFound": "Prestataire introuvable",
+      "notFoundText": "Ce prestataire n'existe pas ou n'est plus disponible.",
+      "backToServices": "Retour aux services",
+      "certified": "Certifié",
+      "reviewsBadge": "Bien noté",
+      "languages": "Langues",
+      "zone": "Zone d'intervention",
+      "radius": "Rayon",
+      "portfolio": "Réalisations",
+      "noPortfolio": "Ce prestataire n'a pas encore ajouté de photos de réalisations.",
+      "requestQuote": "Demander un devis",
+      "book": "Réserver"
+    },
     "serviceDetail": {
       "notFoundTitle": "Service introuvable",
       "notFoundText": "Cette catégorie n'existe pas ou plus.",

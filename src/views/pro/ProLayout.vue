@@ -23,6 +23,7 @@ const LIMITED = new Set(["/pro", "/pro/profil"]);
 
 const validated = ref(true);   // optimiste : on n'affiche pas le bandeau avant le chargement
 const needsDocuments = ref(false);
+const avatarUrl = ref<string | null>(null);
 
 const items = computed(() =>
   validated.value ? allItems : allItems.filter((it) => LIMITED.has(it.to)),
@@ -34,6 +35,7 @@ onMounted(async () => {
     validated.value = profile.statutValidation === "VALIDE";
     // Bandeau : dossier non validé ET aucun document déposé.
     needsDocuments.value = !validated.value && profile.nombreDocuments === 0;
+    avatarUrl.value = profile.avatarUrl;
   } catch {
     /* silencieux : en cas d'échec on laisse l'accès complet par défaut */
   }
@@ -41,7 +43,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <DashboardShell :title="$t('dash.titles.pro')" role="Prestataire" :items="items">
+  <DashboardShell :title="$t('dash.titles.pro')" role="Prestataire" :items="items" :avatar-url="avatarUrl">
     <VerificationBanner :visible="needsDocuments" />
     <RouterView />
   </DashboardShell>
