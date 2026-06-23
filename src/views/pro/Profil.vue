@@ -12,7 +12,9 @@ import DangerZone from "@/components/account/DangerZone.vue";
 import { Camera, Trash2, ImagePlus, X } from "lucide-vue-next";
 import { getCurrentUser, getInitials, getDisplayName } from "@/lib/auth";
 import { useAuthStore } from "@/stores/auth";
-import { api, type ApiError, type DocumentData, type TypeDocument, type PhotoData } from "@/lib/api";
+import { api, type ApiError, type DocumentData, type TypeDocument, type PhotoData,
+         type ServiceData, type CategorieData } from "@/lib/api";
+import { computed } from "vue";
 
 const auth = useAuthStore();
 
@@ -55,6 +57,104 @@ async function loadProfile() {
     avatarUrl.value             = p.avatarUrl;
   } catch {
     /* silencieux : le formulaire reste éditable même si le chargement échoue */
+  }
+}
+
+// ── Mes services (sélection dans le catalogue + proposition) ─────────────────
+const servicesAvailable  = ref<ServiceData[]>([]);
+const selectedServiceIds = ref<string[]>([]);
+const pendingServices    = ref<ServiceData[]>([]);
+const categories         = ref<CategorieData[]>([]);
+const savingServices     = ref(false);
+const proposing          = ref(false);
+const servicesMessage    = ref<{ type: "success" | "error"; text: string } | null>(null);
+const showPropose        = ref(false);
+
+const proposeForm = reactive({ categorieId: "", libelle: "", description: "" });
+
+// Aplatit l'arbre des catégories pour grouper les services et alimenter le <select>.
+const flatCategories = computed<{ id: string; libelle: string }[]>(() => {
+  const out: { id: string; libelle: string }[] = [];
+  const walk = (list: CategorieData[], prefix: string) => {
+    for (const c of list) {
+      const label = prefix ? `${prefix} › ${c.libelle}` : c.libelle;
+      out.push({ id: c.id, libelle: label });
+      if (c.enfants?.length) walk(c.enfants, label);
+    }
+  };
+  walk(categories.value, "");
+  return out;
+});
+
+function categorieLabel(id: string): string {
+  return flatCategories.value.find((c) => c.id === id)?.libelle ?? "Autre";
+}
+
+// Services approuvés regroupés par catégorie (pour l'affichage en sections).
+const servicesByCategorie = computed(() => {
+  const groups = new Map<string, ServiceData[]>();
+  for (const s of servicesAvailable.value) {
+    if (!groups.has(s.categorieId)) groups.set(s.categorieId, []);
+    groups.get(s.categorieId)!.push(s);
+  }
+  return [...groups.entries()].map(([categorieId, services]) => ({
+    categorieId,
+    libelle: categorieLabel(categorieId),
+    services,
+  }));
+});
+
+async function loadServices() {
+  try {
+    const [mes, cats] = await Promise.all([api.getMyServices(), api.getCategories()]);
+    servicesAvailable.value  = mes.available;
+    selectedServiceIds.value = mes.selectedIds;
+    pendingServices.value    = mes.pending;
+    categories.value         = cats;
+  } catch {
+    /* silencieux : la section reste utilisable au prochain chargement */
+  }
+}
+
+async function saveServices() {
+  savingServices.value = true;
+  servicesMessage.value = null;
+  try {
+    await api.setMyServices(selectedServiceIds.value);
+    servicesMessage.value = { type: "success", text: "Vos services ont été enregistrés." };
+  } catch (e) {
+    servicesMessage.value = { type: "error", text: (e as ApiError).message || "Échec de l'enregistrement." };
+  } finally {
+    savingServices.value = false;
+  }
+}
+
+async function proposeNewService() {
+  if (!proposeForm.categorieId || !proposeForm.libelle.trim()) {
+    servicesMessage.value = { type: "error", text: "Choisissez une catégorie et un nom de service." };
+    return;
+  }
+  proposing.value = true;
+  servicesMessage.value = null;
+  try {
+    const created = await api.proposeService({
+      categorieId: proposeForm.categorieId,
+      libelle: proposeForm.libelle.trim(),
+      description: proposeForm.description.trim() || undefined,
+    });
+    pendingServices.value.push(created);
+    proposeForm.categorieId = "";
+    proposeForm.libelle = "";
+    proposeForm.description = "";
+    showPropose.value = false;
+    servicesMessage.value = {
+      type: "success",
+      text: "Service proposé — il sera visible après validation par un administrateur.",
+    };
+  } catch (e) {
+    servicesMessage.value = { type: "error", text: (e as ApiError).message || "Échec de la proposition." };
+  } finally {
+    proposing.value = false;
   }
 }
 
@@ -208,6 +308,7 @@ onMounted(() => {
   loadDocuments();
   loadProfile();
   loadPortfolio();
+  loadServices();
 });
 
 // ── Feedback ───────────────────────────────────────────────────────────────
@@ -396,6 +497,99 @@ async function toggle2fa(active: boolean) {
         >
           {{ saving ? "Enregistrement…" : "Enregistrer les modifications" }}
         </Button>
+      </PanelCard>
+
+      <!-- Mes services -->
+      <PanelCard title="Mes services">
+        <p class="text-sm text-muted-foreground">
+          Sélectionnez les services que vous proposez. Vous n'apparaîtrez dans les résultats de
+          recherche que pour les services cochés. Un service manquant ? Proposez-le ci-dessous.
+        </p>
+
+        <p v-if="servicesMessage" :class="[
+          'mt-3 rounded-md px-3 py-2 text-sm font-medium',
+          servicesMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+        ]">{{ servicesMessage.text }}</p>
+
+        <!-- Catalogue groupé par catégorie -->
+        <div v-if="servicesByCategorie.length" class="mt-5 space-y-5">
+          <div v-for="grp in servicesByCategorie" :key="grp.categorieId">
+            <p class="mb-2 text-sm font-semibold">{{ grp.libelle }}</p>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <label
+                v-for="s in grp.services"
+                :key="s.id"
+                class="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm transition hover:bg-accent"
+              >
+                <input
+                  type="checkbox"
+                  :value="s.id"
+                  v-model="selectedServiceIds"
+                  class="h-4 w-4 rounded border-input"
+                />
+                <span>{{ s.libelle }}</span>
+                <span v-if="s.prixIndicatif" class="ml-auto text-xs text-muted-foreground">
+                  dès {{ s.prixIndicatif }} TND
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <p v-else class="mt-4 text-sm text-muted-foreground">Aucun service au catalogue pour le moment.</p>
+
+        <!-- Propositions en attente -->
+        <div v-if="pendingServices.length" class="mt-5">
+          <p class="mb-2 text-sm font-semibold">En attente de validation</p>
+          <div class="flex flex-wrap gap-2">
+            <Badge v-for="s in pendingServices" :key="s.id" variant="secondary" class="gap-1">
+              {{ s.libelle }} · <span class="text-amber-600">en attente</span>
+            </Badge>
+          </div>
+        </div>
+
+        <div class="mt-5 flex flex-wrap items-center gap-3">
+          <Button
+            class="bg-gradient-warm text-primary-foreground"
+            :disabled="savingServices"
+            @click="saveServices"
+          >
+            {{ savingServices ? "Enregistrement…" : "Enregistrer mes services" }}
+          </Button>
+          <button
+            type="button"
+            class="text-sm text-primary underline"
+            @click="showPropose = !showPropose"
+          >
+            {{ showPropose ? "Annuler" : "+ Proposer un nouveau service (Autre)" }}
+          </button>
+        </div>
+
+        <!-- Formulaire de proposition -->
+        <div v-if="showPropose" class="mt-4 space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label>Catégorie</Label>
+              <select
+                v-model="proposeForm.categorieId"
+                class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="" disabled>Choisir une catégorie…</option>
+                <option v-for="c in flatCategories" :key="c.id" :value="c.id">{{ c.libelle }}</option>
+              </select>
+            </div>
+            <div class="space-y-1.5">
+              <Label>Nom du service</Label>
+              <Input v-model="proposeForm.libelle" placeholder="Ex: Installation borne de recharge" />
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <Label>Description (optionnel)</Label>
+            <Textarea v-model="proposeForm.description" placeholder="Précisez en quoi consiste ce service…" />
+          </div>
+          <Button variant="outline" :disabled="proposing" @click="proposeNewService">
+            {{ proposing ? "Envoi…" : "Soumettre la proposition" }}
+          </Button>
+        </div>
       </PanelCard>
 
       <!-- Photos (avatar + portfolio public) -->

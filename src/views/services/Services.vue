@@ -290,7 +290,7 @@ onMounted(loadCategories);
           <RouterLink
             v-for="r in results"
             :key="r.prestataireId"
-            :to="`/prestataires/${r.prestataireId}`"
+            :to="`/prestataires/${r.slug ?? r.prestataireId}`"
             class="block rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-1 hover:shadow-soft"
           >
             <div class="flex items-start gap-3">

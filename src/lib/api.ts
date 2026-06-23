@@ -134,6 +134,7 @@ export interface PhotoData {
 /** Profil public d'un prestataire (page détail visible des clients). */
 export interface PublicPrestataire {
   id: string;
+  slug: string | null;
   nomCommercial: string;
   categoriePrincipale: string | null;
   zoneIntervention: string | null;
@@ -189,10 +190,19 @@ export interface ServiceData {
   description: string | null;
   prixIndicatif: number | null;
   unite: string | null;
+  statut?: "APPROUVE" | "EN_ATTENTE";
+}
+
+/** Vue « Mes services » du prestataire : catalogue, sélection, propositions en attente. */
+export interface MesServices {
+  available: ServiceData[];
+  selectedIds: string[];
+  pending: ServiceData[];
 }
 
 export interface SearchResultItem {
   prestataireId: string;
+  slug: string | null;
   nomCommercial: string;
   categoriePrincipale: string | null;
   note: number;
@@ -384,9 +394,9 @@ export const api = {
   deletePortfolioPhoto: (id: string): Promise<void> =>
     apiFetch(`/api/prestataires/me/portfolio/${id}`, { method: "DELETE" }),
 
-  /** Profil public d'un prestataire (infos + avatar + portfolio) — public. */
-  getPublicPrestataire: (id: string): Promise<PublicPrestataire> =>
-    apiFetch(`/api/prestataires/${id}/public`),
+  /** Profil public d'un prestataire par slug (ou UUID, rétro-compat) — public. */
+  getPublicPrestataire: (slugOrId: string): Promise<PublicPrestataire> =>
+    apiFetch(`/api/prestataires/${slugOrId}/public`),
 
   /** Sessions/appareils de l'utilisateur (#3). */
   getSessions: (): Promise<SessionData[]> =>
@@ -456,6 +466,38 @@ export const api = {
   /** Désactive (suppression logique) un service — ADMIN (B5). */
   deleteService: (id: string): Promise<void> =>
     apiFetch(`/api/services/${id}`, { method: "DELETE" }),
+
+  // ── Services du prestataire (sélection + proposition) ──────────────────────
+
+  /** Catalogue approuvé + sélection courante + propositions en attente — PRESTATAIRE. */
+  getMyServices: (): Promise<MesServices> =>
+    apiFetch("/api/prestataires/me/services"),
+
+  /** Remplace la liste des services proposés par le prestataire — PRESTATAIRE. */
+  setMyServices: (serviceIds: string[]): Promise<void> =>
+    apiFetch("/api/prestataires/me/services", {
+      method: "PUT",
+      body: JSON.stringify({ serviceIds }),
+    }),
+
+  /** Propose un nouveau service (créé en attente de validation admin) — PRESTATAIRE. */
+  proposeService: (data: { categorieId: string; libelle: string; description?: string }): Promise<ServiceData> =>
+    apiFetch("/api/prestataires/me/services/propose", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  /** Liste des services proposés en attente de validation — ADMIN. */
+  getPendingServices: (): Promise<ServiceData[]> =>
+    apiFetch("/api/services/pending"),
+
+  /** Approuve une proposition de service — ADMIN. */
+  approveService: (id: string): Promise<ServiceData> =>
+    apiFetch(`/api/services/${id}/approve`, { method: "POST" }),
+
+  /** Rejette (supprime) une proposition de service — ADMIN. */
+  rejectService: (id: string): Promise<void> =>
+    apiFetch(`/api/services/${id}/reject`, { method: "POST" }),
 
   // ── Admin — validation prestataires (B9) ───────────────────────────────────
 
