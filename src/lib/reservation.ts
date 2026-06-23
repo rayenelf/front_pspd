@@ -50,3 +50,41 @@ export const STATUT_LABELS: Record<StatutReservation, string> = {
   ANNULEE: "Annulée",
   EN_LITIGE: "En litige",
 };
+
+// ── Flow AVEC_DEVIS (extension) ─────────────────────────────────────────────
+
+export type StatutDevis = "ENVOYE" | "ACCEPTE" | "REFUSE" | "NEGOCIATION";
+
+/** Réponse API d'un devis (miroir backend `DevisResponse`). */
+export interface Devis {
+  id: string;
+  reservationId: string;
+  montant: number;
+  dureeEstimeeH: number | null;
+  conditions: string | null;
+  statut: StatutDevis;
+  emisLe: string; // ISO datetime
+}
+
+/** Corps de POST /api/reservations/{id}/devis (prestataire chiffre la demande). */
+export interface CreateDevisRequest {
+  montant: number;
+  dureeEstimeeH?: number | null;
+  conditions?: string | null;
+}
+
+/** Métadonnées d'une image de travail (miroir backend `ReservationImageResponse`). */
+export interface ReservationImage {
+  id: string;
+  reservationId: string;
+  url: string;
+  contentType: string | null;
+  ordre: number;
+}
+
+export const STATUT_DEVIS_LABELS: Record<StatutDevis, string> = {
+  ENVOYE: "Envoyé",
+  ACCEPTE: "Accepté",
+  REFUSE: "Refusé",
+  NEGOCIATION: "En négociation",
+};

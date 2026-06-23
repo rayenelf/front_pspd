@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { RouterLink } from "vue-router";
 import PanelCard from "@/components/dashboard/PanelCard.vue";
 import Badge from "@/components/ui/Badge.vue";
 import Button from "@/components/ui/Button.vue";
@@ -116,7 +117,10 @@ onMounted(charger);
             <td><Badge :variant="badgeVariant(m.statut)">{{ STATUT_LABELS[m.statut] }}</Badge></td>
             <td class="text-right">{{ m.prixConvenu != null ? `${m.prixConvenu} TND` : "—" }}</td>
             <td class="space-x-2 text-right">
-              <template v-if="m.statut === 'EN_ATTENTE'">
+              <RouterLink v-if="m.statut === 'EN_ATTENTE' && m.type === 'AVEC_DEVIS'" to="/pro/devis">
+                <Button size="sm" variant="secondary">Faire un devis</Button>
+              </RouterLink>
+              <template v-else-if="m.statut === 'EN_ATTENTE'">
                 <Button size="sm" :disabled="busyId === m.id"
                         @click="action(m.id, reservationApi.accepter)">Accepter</Button>
                 <Button size="sm" variant="destructive" :disabled="busyId === m.id"
