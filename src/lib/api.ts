@@ -144,6 +144,7 @@ export interface PublicPrestataire {
   certifie: boolean;
   avatarUrl: string | null;
   portfolio: PhotoData[];
+  services: ServiceData[];
 }
 
 export interface AuthResponse {
@@ -225,6 +226,7 @@ export interface Page<T> {
 
 export interface SearchParams {
   service?: string;
+  category?: string;
   prixMax?: number;
   noteMin?: number;
   certifie?: boolean;
@@ -236,6 +238,18 @@ export interface SearchParams {
   lat?: number;
   lng?: number;
   rayon?: number;
+}
+
+// ── Agenda prestataire ───────────────────────────────────────────────────────
+
+export interface AgendaEntry {
+  id: string;
+  dateService: string;       // "YYYY-MM-DD"
+  heureService: string;      // "HH:mm:ss"
+  statut: "ACCEPTEE" | "EN_COURS";
+  clientNomComplet: string;
+  serviceLibelle: string;
+  prixConvenu: number | null;
 }
 
 // ── Admin — validation prestataires (B9) ────────────────────────────────────
@@ -519,6 +533,10 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ statut, motif }),
     }),
+
+  /** Calendrier mensuel du prestataire (missions ACCEPTEE/EN_COURS) — PRESTATAIRE. */
+  agendaForMonth: (year: number, month: number): Promise<AgendaEntry[]> =>
+    apiFetch(`/api/reservations/agenda?year=${year}&month=${month}`),
 
   /**
    * Récupère un document légal et renvoie une URL blob à ouvrir/visualiser — ADMIN.

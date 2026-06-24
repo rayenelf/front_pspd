@@ -35,9 +35,10 @@ export interface Reservation {
 export interface CreateReservationRequest {
   prestataireId: string;
   serviceId: string;
-  adresseId: string;
+  adresseId?: string;
   dateService: string; // "YYYY-MM-DD"
   heureService: string; // "HH:mm"
+  description?: string;
 }
 
 /** Libellé + couleur d'affichage par statut (badges des deux écrans). */

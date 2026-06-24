@@ -40,6 +40,8 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: "", component: () => import("@/views/client/ClientHome.vue") },
       { path: "reservations", component: () => import("@/views/client/Reservations.vue") },
+      { path: "recherche", component: () => import("@/views/client/Recherche.vue") },
+      { path: "prestataires/:slug", component: () => import("@/views/services/PrestataireDetail.vue") },
       { path: "favoris", component: () => import("@/views/client/Favoris.vue") },
       { path: "factures", component: () => import("@/views/client/Factures.vue") },
       { path: "profil", component: () => import("@/views/client/Profil.vue") },
