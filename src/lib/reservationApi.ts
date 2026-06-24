@@ -41,6 +41,22 @@ async function fetchBlobUrl(path: string): Promise<string> {
 }
 
 export const reservationApi = {
+  // ── Côté CLIENT ───────────────────────────────────────────────────────────
+  /** Crée une réservation immédiate (US C1). */
+  creer: (req: import("@/lib/reservation").CreateReservationRequest): Promise<Reservation> =>
+    call("/api/reservations", "POST", req),
+
+  /** Réservations du client connecté, filtrables par statut. */
+  mesReservations: (statut?: StatutReservation): Promise<Reservation[]> =>
+    call(`/api/reservations${statut ? `?statut=${statut}` : ""}`, "GET"),
+
+  /** Détail d'une réservation. */
+  getById: (id: string): Promise<Reservation> => call(`/api/reservations/${id}`, "GET"),
+
+  /** Client annule sa réservation. */
+  annuler: (id: string): Promise<Reservation> => call(`/api/reservations/${id}/annuler`, "PATCH"),
+
+  // ── Côté PRESTATAIRE ──────────────────────────────────────────────────────
   /** Missions du prestataire connecté, éventuellement filtrées par statut. */
   mesMissions: (statut?: StatutReservation): Promise<Reservation[]> =>
     call(`/api/reservations/mes-missions${statut ? `?statut=${statut}` : ""}`, "GET"),

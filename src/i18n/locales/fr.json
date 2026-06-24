@@ -418,6 +418,7 @@
     "nav": {
       "clientOverview": "Vue d'ensemble",
       "clientReservations": "Mes réservations",
+      "clientServices": "Trouver un prestataire",
       "clientInvoices": "Factures",
       "clientFavorites": "Favoris",
       "clientProfile": "Profil",

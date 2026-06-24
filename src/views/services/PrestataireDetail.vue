@@ -1,15 +1,23 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, RouterLink } from "vue-router";
 import SiteShell from "@/components/site/SiteShell.vue";
 import Button from "@/components/ui/Button.vue";
+import ReservationModal from "@/components/reservation/ReservationModal.vue";
 import { Star, ShieldCheck, MapPin, ArrowLeft, Compass } from "lucide-vue-next";
 import { api, type PublicPrestataire } from "@/lib/api";
+import { isAuthenticated, getRole } from "@/lib/auth";
+import { useRouter } from "vue-router";
 
 const route = useRoute();
+const router = useRouter();
 const provider = ref<PublicPrestataire | null>(null);
 const loading  = ref(true);
 const notFound = ref(false);
+const showModal = ref(false);
+
+const isEmbedded = computed(() => route.path.startsWith("/client/"));
+const backTo     = computed(() => isEmbedded.value ? "/client/recherche" : "/services");
 
 async function load(slug: string) {
   loading.value = true;
@@ -24,16 +32,23 @@ async function load(slug: string) {
 }
 
 onMounted(() => load(route.params.slug as string));
-// Recharge si on navigue d'un prestataire à un autre sans démonter la vue.
 watch(() => route.params.slug, (slug) => { if (slug) load(slug as string); });
 
 function initials(name: string) {
   return name.slice(0, 2).toUpperCase();
 }
+
+function handleReserver() {
+  if (!isAuthenticated() || getRole() !== "CLIENT") {
+    router.push("/auth/login");
+    return;
+  }
+  showModal.value = true;
+}
 </script>
 
 <template>
-  <SiteShell>
+  <component :is="isEmbedded ? 'div' : SiteShell">
     <p v-if="loading" class="mx-auto max-w-3xl px-6 py-24 text-center text-muted-foreground">
       {{ $t("pages.providerDetail.loading") }}
     </p>
@@ -41,16 +56,16 @@ function initials(name: string) {
     <div v-else-if="notFound || !provider" class="mx-auto max-w-2xl px-6 py-24 text-center">
       <h1 class="font-display text-3xl font-bold">{{ $t("pages.providerDetail.notFound") }}</h1>
       <p class="mt-2 text-muted-foreground">{{ $t("pages.providerDetail.notFoundText") }}</p>
-      <RouterLink to="/services" class="mt-6 inline-block text-primary underline">
+      <RouterLink :to="backTo" class="mt-6 inline-block text-primary underline">
         {{ $t("pages.providerDetail.backToServices") }}
       </RouterLink>
     </div>
 
     <template v-else>
       <!-- En-tête -->
-      <section class="bg-gradient-hero py-14 text-primary-foreground">
+      <section class="bg-gradient-hero py-14 text-primary-foreground" :class="{ 'rounded-xl': isEmbedded }">
         <div class="mx-auto max-w-7xl px-6">
-          <RouterLink to="/services" class="inline-flex items-center gap-1 text-sm text-white/70 hover:text-white">
+          <RouterLink :to="backTo" class="inline-flex items-center gap-1 text-sm text-white/70 hover:text-white">
             <ArrowLeft class="h-4 w-4" /> {{ $t("pages.providerDetail.backToServices") }}
           </RouterLink>
           <div class="mt-5 flex flex-col gap-5 sm:flex-row sm:items-center">
@@ -116,14 +131,19 @@ function initials(name: string) {
               <dd class="inline-flex items-center gap-1 font-medium"><Compass class="h-4 w-4" /> {{ provider.rayonKm }} km</dd>
             </div>
           </dl>
-          <Button class="mt-6 w-full bg-gradient-warm text-primary-foreground" size="lg">
-            {{ $t("pages.providerDetail.requestQuote") }}
-          </Button>
-          <Button variant="outline" class="mt-2 w-full" size="lg">
+          <Button class="mt-6 w-full bg-gradient-warm text-primary-foreground" size="lg" @click="handleReserver">
             {{ $t("pages.providerDetail.book") }}
           </Button>
         </aside>
       </section>
     </template>
-  </SiteShell>
+  </component>
+
+  <ReservationModal
+    v-if="showModal && provider"
+    :prestataire-id="provider.id"
+    :nom-commercial="provider.nomCommercial"
+    :services="provider.services ?? []"
+    @close="showModal = false"
+  />
 </template>
