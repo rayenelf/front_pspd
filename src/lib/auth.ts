@@ -211,8 +211,11 @@ export interface SignupResponse {
   statutCompte: string;
 }
 
+// Base des appels REST auth. VITE_API_BASE_URL = racine du backend (sans /api) ;
+// on ajoute /api ici, comme le font lib/api.ts & lib/reservationApi.ts via leurs
+// chemins. En dev (var absente) → "/api" → proxy Vite vers le backend local.
 function getApiBaseUrl() {
-  return import.meta.env.VITE_API_BASE_URL ?? "/api";
+  return (import.meta.env.VITE_API_BASE_URL ?? "") + "/api";
 }
 
 export async function registerAccount(payload: SignupPayload): Promise<SignupResponse> {
