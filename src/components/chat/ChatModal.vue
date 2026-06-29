@@ -44,7 +44,7 @@ async function init() {
     messages.value = await chatApi.getMessages(conv.id);
     if (messages.value.length) lastTs.value = messages.value[messages.value.length - 1].envoyeLe;
     await loadImages(messages.value);
-    await loadDevis();
+    if (props.reservation.type === "AVEC_DEVIS") await loadDevis();
     await nextTick();
     scrollBottom();
   } catch (e) {
@@ -76,18 +76,29 @@ async function loadImages(msgs: ChatMessage[]) {
   }
 }
 
+// MySQL DATETIME has second precision; truncate to avoid missing same-second messages
+function toSecond(iso: string): string {
+  return iso.split(".")[0];
+}
+
 async function poll() {
   if (!convId.value) return;
   try {
-    const newer = await chatApi.getMessages(convId.value, lastTs.value ?? undefined);
-    if (newer.length) {
-      messages.value.push(...newer);
-      lastTs.value = newer[newer.length - 1].envoyeLe;
-      await loadImages(newer);
-      await nextTick();
-      scrollBottom();
+    const since = lastTs.value ? toSecond(lastTs.value) : undefined;
+    const fetched = await chatApi.getMessages(convId.value, since);
+    if (fetched.length) {
+      const seen = new Set(messages.value.map((m) => m.id));
+      const newer = fetched.filter((m) => !seen.has(m.id));
+      if (newer.length) {
+        messages.value.push(...newer);
+        lastTs.value = newer[newer.length - 1].envoyeLe;
+        await loadImages(newer);
+        await nextTick();
+        scrollBottom();
+      }
     }
-    if (!devis.value) await loadDevis();
+    // only reservations AVEC_DEVIS can have a devis
+    if (!devis.value && props.reservation.type === "AVEC_DEVIS") await loadDevis();
   } catch {
     // ignore poll errors silently
   }
