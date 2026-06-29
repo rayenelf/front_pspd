@@ -82,4 +82,12 @@ export const reservationApi = {
   /** Le prestataire émet un devis pour la demande. */
   creerDevis: (reservationId: string, req: CreateDevisRequest): Promise<Devis> =>
     call(`/api/reservations/${reservationId}/devis`, "POST", req),
+
+  /** Le client accepte le devis → réservation passe ACCEPTEE. */
+  accepterDevis: (reservationId: string): Promise<Devis> =>
+    call(`/api/reservations/${reservationId}/devis/accepter`, "PATCH"),
+
+  /** Le client refuse le devis. */
+  refuserDevis: (reservationId: string): Promise<Devis> =>
+    call(`/api/reservations/${reservationId}/devis/refuser`, "PATCH"),
 };

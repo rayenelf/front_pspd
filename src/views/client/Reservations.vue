@@ -4,6 +4,7 @@ import { RouterLink } from "vue-router";
 import PanelCard from "@/components/dashboard/PanelCard.vue";
 import Badge from "@/components/ui/Badge.vue";
 import Button from "@/components/ui/Button.vue";
+import ChatModal from "@/components/chat/ChatModal.vue";
 import { reservationApi } from "@/lib/reservationApi";
 import { STATUT_LABELS, type Reservation, type StatutReservation } from "@/lib/reservation";
 
@@ -11,6 +12,7 @@ const reservations = ref<Reservation[]>([]);
 const loading  = ref(true);
 const error    = ref<string | null>(null);
 const busyId   = ref<string | null>(null);
+const chatReservation = ref<Reservation | null>(null);
 
 const onglets: { label: string; statut: StatutReservation | null }[] = [
   { label: "Toutes",      statut: null },
@@ -50,6 +52,10 @@ function formatHeure(h: string) {
 
 function peutAnnuler(r: Reservation) {
   return r.statut === "EN_ATTENTE" || r.statut === "ACCEPTEE";
+}
+
+function peutDiscuter(r: Reservation) {
+  return r.statut === "EN_ATTENTE" || r.statut === "ACCEPTEE" || r.statut === "EN_COURS";
 }
 
 async function charger() {
@@ -137,7 +143,15 @@ onMounted(charger);
             <td class="pr-4 text-right">
               {{ r.prixConvenu != null ? `${r.prixConvenu} TND` : "—" }}
             </td>
-            <td class="text-right">
+            <td class="space-x-2 text-right">
+              <Button
+                v-if="peutDiscuter(r)"
+                variant="secondary"
+                size="sm"
+                @click="chatReservation = r"
+              >
+                Discuter
+              </Button>
               <Button
                 v-if="peutAnnuler(r)"
                 variant="ghost"
@@ -162,4 +176,11 @@ onMounted(charger);
       </RouterLink>
     </div>
   </PanelCard>
+
+  <ChatModal
+    v-if="chatReservation"
+    :reservation="chatReservation"
+    role="CLIENT"
+    @close="chatReservation = null"
+  />
 </template>

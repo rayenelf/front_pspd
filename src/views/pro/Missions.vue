@@ -4,6 +4,7 @@ import { RouterLink } from "vue-router";
 import PanelCard from "@/components/dashboard/PanelCard.vue";
 import Badge from "@/components/ui/Badge.vue";
 import Button from "@/components/ui/Button.vue";
+import ChatModal from "@/components/chat/ChatModal.vue";
 import { reservationApi } from "@/lib/reservationApi";
 import { STATUT_LABELS, type Reservation, type StatutReservation } from "@/lib/reservation";
 
@@ -11,6 +12,7 @@ const missions = ref<Reservation[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const busyId = ref<string | null>(null);
+const chatReservation = ref<Reservation | null>(null);
 
 // Onglets de filtre par statut. `null` = toutes les missions.
 const onglets: { label: string; statut: StatutReservation | null }[] = [
@@ -131,10 +133,25 @@ onMounted(charger);
               <Button v-else-if="m.statut === 'EN_COURS'" size="sm" :disabled="busyId === m.id"
                       @click="action(m.id, reservationApi.terminer)">Terminer</Button>
               <span v-else class="text-xs text-muted-foreground">—</span>
+              <Button
+                v-if="m.statut === 'EN_ATTENTE' || m.statut === 'ACCEPTEE' || m.statut === 'EN_COURS'"
+                size="sm"
+                variant="secondary"
+                @click="chatReservation = m"
+              >
+                Discuter
+              </Button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
   </PanelCard>
+
+  <ChatModal
+    v-if="chatReservation"
+    :reservation="chatReservation"
+    role="PRESTATAIRE"
+    @close="chatReservation = null"
+  />
 </template>
